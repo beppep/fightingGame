@@ -2,7 +2,7 @@ import pygame
 import time
 import random
 clock = pygame.time.Clock()
-filepath="C:/Users/brovar02/Documents/gameartstuff/"
+filepath="/Users/ab51803/Downloads/fightingGame-master/"
 #C:/Users/brovar02/Documents/gameartstuff/
 
 class State():
@@ -53,7 +53,7 @@ class Projectile():
                 if self.hurtboxes[2]>otherBox[0] and self.hurtboxes[0]<otherBox[2]:
                     if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
                         Projectile.projectiles.remove(self)
-                        if isinstance(player, Projectile):
+                        if isinstance(player, Projectile) and player in Projectile.projectiles:
                             Projectile.projectiles.remove(player)
 
 class Player():
@@ -61,12 +61,14 @@ class Player():
     def __init__(self, x, y, facingRight, controls):
         Player.players.append(self)
         self.SCALE = 8
+        self.flyingHeight=0
         self.x = x
         self.xv = 0
         self.y = y
         self.yv = 0
         self.maxhp = 200
         self.stun = 0
+        self.invincible=False
         self.state = State.idle
         self.attackFrame = 0
         self.holding = False
@@ -83,8 +85,10 @@ class Player():
         #self.hurtboxes = self.generateBox(self.box)
         self.hp = self.maxhp
         pass
-
+    def passive(self):
+        pass
     def action(self, pressed):
+        self.passive()
         if self.state == State.stunned:
             self.stunned()
         elif self.state == State.idle:
@@ -166,12 +170,15 @@ class Player():
 
         self.x+=self.xv
         self.hurtboxes = self.generateBox(self.box)
+        self.hurtboxes[3]+=self.flyingHeight
         for player in Player.players:
-            if self.collide(player.hurtboxes) and not player==self:
+            otherbox=player.hurtboxes[:]
+            otherbox[3]+=player.flyingHeight
+            if self.collide(otherbox) and not player==self:
                 if self.xv<0:
-                    self.x += player.hurtboxes[2]-self.hurtboxes[0]
+                    self.x += otherbox[2]-self.hurtboxes[0]
                 else:
-                    self.x += player.hurtboxes[0]-self.hurtboxes[2]
+                    self.x += otherbox[0]-self.hurtboxes[2]
         if self.hurtboxes[2]>900:
             self.x += 900-self.hurtboxes[2]
             if self.stun:
@@ -180,20 +187,22 @@ class Player():
             self.x += 100-self.hurtboxes[0]
             if self.stun:
                 self.hurt("left wall", abs(self.xv*5 ))
-
-        self.hurtboxes = self.generateBox(self.box)
         self.onGround=False
         self.y+=self.yv
         self.hurtboxes = self.generateBox(self.box)
+        self.hurtboxes[3]+=self.flyingHeight
+
         for player in Player.players:
-            if self.collide(player.hurtboxes) and not player==self:
+            otherbox=player.hurtboxes[:]
+            otherbox[3]+=player.flyingHeight
+            if self.collide(otherbox) and not player==self:
                 if self.yv<0:
-                    self.y+=player.hurtboxes[3]-self.hurtboxes[1]
+                    self.y+=otherbox[3]-self.hurtboxes[1]
                     self.yv=0
                 elif self.yv==0:
                     pass
                 elif self.yv>0:
-                    self.y+=player.hurtboxes[1]-self.hurtboxes[3]
+                    self.y+=otherbox[1]-self.hurtboxes[3]
                     self.yv=0
                     self.xv=0
                     self.onGround=True
@@ -226,6 +235,8 @@ class Player():
                     Projectile.projectiles.remove(player)
 
     def hurt(self, player, damage):
+        if(self.invincible):
+            return
         if player == "left wall":
             self.facingRight = False
         elif player == "right wall":
@@ -271,7 +282,7 @@ class Player():
             pygame.draw.rect(gameDisplay, (255, 0, 0), \
             (self.hurtboxes[0],self.hurtboxes[1]-24+1,width,6), 0)
             pygame.draw.rect(gameDisplay, (0, 255, 0), \
-            (self.hurtboxes[0],self.hurtboxes[1]-24,width*self.hp/200,8), 0)
+            (self.hurtboxes[0],self.hurtboxes[1]-24,width*self.hp/self.maxhp,8), 0)
 
 class Puncher(Player):
 
@@ -300,8 +311,8 @@ class Puncher(Player):
         [100, self.punchImage],
         [110, self.longPunchImage, [32-7, 32-8-6, 32, 32-8, 40]],
         [130, self.longPunchImage],
-        [150, self.punchImage],
-        [170, self.prePunchImage],
+        [140, self.punchImage],
+        [160, self.prePunchImage],
         ]
 
         self.extreme = [
@@ -400,13 +411,92 @@ class Big(Player):
         self.skullImage = self.load("skull2.png")
         self.image = self.idleImage
 
+class Bird(Player):
+    def passive(self):
+        if self.attackFrame%20<10:
+            self.image = self.idlebImage
+        else:
+
+            self.image = self.idleImage
+    def __init__(self, x, y, facingRight, controls):
+        super(Bird, self).__init__(x, y, facingRight, controls)
+        self.box = [16-3, 32-18, 16+3, 32-10]
+        self.flyingHeight=4*self.SCALE
+        self.init2()
+
+        self.attack1 = [
+        [22, self.prePunchImage],
+        [28, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 17]],
+        [35, self.punchImage],
+        [44, self.prePunchImage],
+        ]
+
+        self.attack2 = [
+        [30, self.prePunchImage],
+        [45, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 40]],
+        [55, self.punchImage],
+        [70, self.prePunchImage],
+        ]
+
+
+    def attack3(self, pressed):
+        if self.attackFrame < 26:
+            self.image = self.preelImage
+            self.attackBox = None
+        elif self.attackFrame < 150:
+            self.image = self.dodgeImage
+            self.attackBox = None
+            if not pressed[self.controls["3"]]:
+                self.holding = False
+                self.attackFrame = 150
+
+        elif self.attackFrame < 180:
+            self.image = self.elaImage
+            self.attackBox = [0, 15, 32, 32-8, 5]
+            if self.attackFrame%6>3:
+                self.image = self.elbImage
+
+        elif self.attackFrame < 200:
+            self.image = self.preelImage
+            self.attackBox = None
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack4(self, pressed):
+        if self.attackFrame < 60:
+            self.image = self.dodgeImage
+            self.invincible=True
+            self.attackBox = None
+        elif self.attackFrame < 70:
+            self.invincible=False
+            self.image = self.idlebImage
+            self.attackBox = None
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def loadImages(self):
+        self.idleImage = self.load("idle5.png")
+        self.idlebImage = self.load("idleb5.png")
+        self.stunnedImage = self.load("stunned5.png")
+        self.prePunchImage = self.load("prepunch5.png")
+        self.punchImage = self.load("punch5.png")
+        self.dodgeImage = self.load("dodge5.png")
+        self.preelImage = self.load("preel5.png")
+        self.elaImage = self.load("ela5.png")
+        self.elbImage = self.load("elb5.png")
+        self.image = self.idleImage
+
 class Green(Player):
 
     def __init__(self, x, y, facingRight, controls):
         super(Green, self).__init__(x, y, facingRight, controls)
         self.box = [16-3, 32-14, 16+3, 32-4]
         self.projectiles = []
-        self.hp = 200
+        self.maxhp = 120
         self.init2()
 
         self.attack1 = [
@@ -471,9 +561,10 @@ while jump_out == False:
     if len(Player.players)<2:
         time.sleep(1)
         Player.players = []
-        playerOne = random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_SPACE, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        playerTwo = random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_p,"3":pygame.K_o,"4":pygame.K_i})
-
+        playerOne = random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        #playerTwo = random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_p,"3":pygame.K_o,"4":pygame.K_i})
+        #playerOne = Bird(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        playerTwo = Bird(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_p,"3":pygame.K_o,"4":pygame.K_i})
     #pygame.event.get()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
