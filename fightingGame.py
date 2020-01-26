@@ -2,7 +2,7 @@ import pygame
 import time
 import random
 clock = pygame.time.Clock()
-filepath="/Users/ab51803/Downloads/fightingGame-master/"
+filepath="C:/Users/antmat02/Documents/Git/BeppeFighting/fightingGame/"
 #C:/Users/brovar02/Documents/gameartstuff/
 
 class State():
@@ -685,6 +685,60 @@ class Lizard(Player):
         self.tailImage = self.load("kick7.png")
         self.image = self.idleImage
 
+class Can(Player):
+
+    def __init__(self, x, y, facingRight, controls):
+        super(Can, self).__init__(x, y, facingRight, controls)
+        self.box = [16-3, 32-17, 16+3, 32-4]
+        self.init2()
+
+        self.attack1 = [
+        [10, self.prePunchImage],
+        [15, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 15]],
+        [20, self.punchImage],
+        [30, self.prePunchImage],
+        ]
+
+        self.attack2 = [
+        [20, self.prePunchImage],
+        [35, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 50]],
+        [45, self.punchImage],
+        [60, self.prePunchImage],
+        ]
+
+        self.long = [
+        [20, self.prePunchImage],
+        [90, self.prePunchImage, None, True],
+        [100, self.punchImage],
+        [110, self.longPunchImage, [32-7, 32-8-6, 32, 32-8, 40]],
+        [130, self.longPunchImage],
+        [140, self.punchImage],
+        [160, self.prePunchImage],
+        ]
+
+        self.extreme = [
+        [60, self.prePunchImage],
+        [80, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 120]],
+        [120, self.punchImage],
+        [150, self.prePunchImage],
+        ]
+
+    def attack3(self, pressed):
+        self.executeAttack(self.long, not pressed[self.controls["3"]])
+
+    def attack4(self, pressed):
+        self.executeAttack(self.extreme)
+        #self.state = State.idle
+
+    def loadImages(self):
+        self.idleImage = self.load("idle8.png")
+        self.stunnedImage = self.load("stunned8.png")
+        self.longPunchImage = self.load("longpunch8.png")
+        self.prePunchImage = self.load("prepunch8.png")
+        self.punchImage = self.load("punch8.png")
+        self.image = self.idleImage
+
+
 classes = [Puncher, Big, Green,Bird,Robot]
 
 gameDisplay = pygame.display.set_mode((1000, 600))
@@ -696,11 +750,11 @@ while jump_out == False:
         Player.players = []
         #random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
         #random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
-        #random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
         #random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
 
-        Robot(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        Lizard(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+        #Robot(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        Can(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
     #pygame.event.get()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
