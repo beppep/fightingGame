@@ -21,6 +21,9 @@ class Projectile():
         if isinstance(self.owner, Green):
             self.xv = (self.facingRight-0.5) * 10
             self.box = [32-11, 18, 32-6, 32-9, 20]
+        if isinstance(self.owner, Robot):
+            self.xv = (self.facingRight-0.5) * 20
+            self.box = [32-12, 16, 32-6, 20, 7]
     
     def keys(self, pressed):
         nevercalled
@@ -52,7 +55,8 @@ class Projectile():
                 otherBox = player.hitboxes
                 if self.hurtboxes[2]>otherBox[0] and self.hurtboxes[0]<otherBox[2]:
                     if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
-                        Projectile.projectiles.remove(self)
+                        if self in Projectile.projectiles:
+                            Projectile.projectiles.remove(self)
                         if isinstance(player, Projectile) and player in Projectile.projectiles:
                             Projectile.projectiles.remove(player)
 
@@ -94,9 +98,9 @@ class Player():
         elif self.state == State.idle:
             self.keys(pressed)
         elif self.state == 1:
-            self.executeAttack(self.attack1)
+            self.executeAttack(self.attack1, not pressed[self.controls["1"]])
         elif self.state == 2:
-            self.executeAttack(self.attack2)
+            self.executeAttack(self.attack2, not pressed[self.controls["2"]])
         elif self.state == 3:
             self.attack3(pressed)
         elif self.state == 4:
@@ -227,14 +231,19 @@ class Player():
         for player in Player.players:
             if player.hitboxes and not player == self and not self.stun:
                 if self.collide(player.hitboxes):
-                    self.hurt(player, player.hitboxes[4])
+                    if(len(player.hitboxes)==6):
+                        self.hurt(player, player.hitboxes[4],player.hitboxes[5])
+                    else:
+                        self.hurt(player, player.hitboxes[4])
         for player in Projectile.projectiles:
             if player.hitboxes and not player == self and not self.stun:
                 if self.collide(player.hitboxes):
                     self.hurt(player, player.hitboxes[4])
                     Projectile.projectiles.remove(player)
 
-    def hurt(self, player, damage):
+    def hurt(self, player, damage,knockback=-1):
+        if(knockback==-1):
+            knockback=damage
         if(self.invincible):
             return
         if player == "left wall":
@@ -245,16 +254,18 @@ class Player():
             self.facingRight = not player.facingRight
         self.state = State.stunned
         self.hp -= damage
-        self.stun = max(self.stun, damage)
+        self.stun = max(self.stun, knockback)
         self.attackFrame = 0
-        self.yv=-damage*0.2
-        self.xv=damage*(self.facingRight-0.5)*-0.2
+        self.yv=-knockback*0.2
+        self.xv=knockback*(self.facingRight-0.5)*-0.2
         
 
     def generateBox(self, data):
         new = [self.x+data[0]*self.SCALE, self.y+data[1]*self.SCALE, self.x+data[2]*self.SCALE, self.y+data[3]*self.SCALE]
         if len(data)>4:
             new.append(data[4])
+        if len(data)>5:
+            new.append(data[5])
         return new
 
     def collide(self, otherBox):
@@ -273,16 +284,16 @@ class Player():
         image = self.image[self.facingRight]
         gameDisplay.blit(image, (self.x, self.y))
 
-        if random.random()<.1:
+        if random.random()<.8:
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0],self.hitboxes[1],self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
         if self.hp>0:
             width=self.hurtboxes[2]-self.hurtboxes[0]
             pygame.draw.rect(gameDisplay, (255, 0, 0), \
-            (self.hurtboxes[0],self.hurtboxes[1]-24+1,width,6), 0)
+            (self.hurtboxes[0],self.hurtboxes[1]-32+1,width,6), 0)
             pygame.draw.rect(gameDisplay, (0, 255, 0), \
-            (self.hurtboxes[0],self.hurtboxes[1]-24,width*self.hp/self.maxhp,8), 0)
+            (self.hurtboxes[0],self.hurtboxes[1]-32,width*self.hp/self.maxhp,8), 0)
 
 class Puncher(Player):
 
@@ -411,6 +422,68 @@ class Big(Player):
         self.skullImage = self.load("skull2.png")
         self.image = self.idleImage
 
+class Green(Player):
+
+    def __init__(self, x, y, facingRight, controls):
+        super(Green, self).__init__(x, y, facingRight, controls)
+        self.box = [16-3, 32-14, 16+3, 32-4]
+        self.projectiles = []
+        self.maxhp = 120
+        self.init2()
+
+        self.attack1 = [
+        [10, self.kickImage, [32-14, 32-6, 32-10, 32-3, 10]],
+        [20, self.kickImage, None],
+        [25, self.idleImage, None],
+        ]
+
+        self.attack2 = [
+        [15, self.stunnedImage, None],
+        [25, self.skullImage, [32-9-5, 32-8-6, 32-9, 32-9, 40]],
+        [40, self.skullImage, None],
+        ]
+
+    def attack3(self, pressed):
+
+        if self.attackFrame < 20:
+            self.image = self.stunnedImage
+            self.attackBox = None
+        elif self.attackFrame < 25:
+            self.image = self.idleImage
+        elif self.attackFrame < 33: 
+            self.image = self.skullImage
+        elif self.attackFrame == 33:
+            self.image = self.skullImage
+            Projectile.projectiles.append(Projectile(self))
+        elif self.attackFrame < 60:
+            self.image = self.skullImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack4(self, pressed):
+        if self.attackFrame < 70:
+            self.image = self.magicImage
+            self.attackBox = None
+            if self.attackFrame%10==0:
+                self.facingRight = not self.facingRight
+        else:
+            self.hp = min(self.maxhp, self.hp+20)
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def loadImages(self):
+        self.idleImage = self.load("idle3.png")
+        self.stunnedImage = self.load("stunned3.png")
+        self.kickImage = self.load("kick3.png")
+        self.skullImage = self.load("skull3.png")
+        self.projaImage = self.load("proja3.png")
+        self.projbImage = self.load("projb3.png")
+        self.magicImage = self.load("magic3.png")
+        self.image = self.idleImage
+
 class Bird(Player):
     def passive(self):
         if self.attackFrame%20<10:
@@ -440,8 +513,8 @@ class Bird(Player):
 
 
     def attack3(self, pressed):
-        if self.attackFrame < 26:
-            self.image = self.preelImage
+        if self.attackFrame < 38:
+            self.image = self.dodgeImage
             self.attackBox = None
         elif self.attackFrame < 150:
             self.image = self.dodgeImage
@@ -490,69 +563,129 @@ class Bird(Player):
         self.elbImage = self.load("elb5.png")
         self.image = self.idleImage
 
-class Green(Player):
+class Robot(Player):
 
     def __init__(self, x, y, facingRight, controls):
-        super(Green, self).__init__(x, y, facingRight, controls)
-        self.box = [16-3, 32-14, 16+3, 32-4]
+        super(Robot, self).__init__(x, y, facingRight, controls)
+        self.box = [16-4, 32-18, 16+4, 32-7]
         self.projectiles = []
-        self.maxhp = 120
+        self.maxhp = 200
         self.init2()
 
-        self.attack1 = [
-        [10, self.kickImage, [32-14, 32-6, 32-10, 32-3, 10]],
-        [20, self.kickImage, None],
-        [25, self.idleImage, None],
+        self.attack2 = [
+        [15, self.prePunchImage,None],
+        [30, self.punchImage, [24, 32-17, 27, 32-12, 18]],
+        [300, self.punchImage, [24, 32-17, 27, 32-12, 18],True],
+        [320, self.prePunchImage,None],
         ]
 
-        self.attack2 = [
-        [15, self.stunnedImage, None],
-        [25, self.skullImage, [32-9-5, 32-8-6, 32-9, 32-9, 40]],
-        [40, self.skullImage, None],
+        self.attack1 = [
+        [33, self.stunnedImage,None],
+        [38, self.fireImage, [20, 32-17, 24, 32-12, 58]],
+        [45, self.fireImage, None],
+        [60, self.stunnedImage, None],
         ]
 
     def attack3(self, pressed):
-
-        if self.attackFrame < 20:
-            self.image = self.stunnedImage
-            self.attackBox = None
-        elif self.attackFrame < 25:
+        if self.attackFrame < 8:
             self.image = self.idleImage
-        elif self.attackFrame < 33: 
-            self.image = self.skullImage
-        elif self.attackFrame == 33:
-            self.image = self.skullImage
+            self.attackBox = None        
+        elif self.attackFrame < 14: 
+            self.image = self.fireImage
+        elif self.attackFrame == 14:
+            self.image = self.fireImage
             Projectile.projectiles.append(Projectile(self))
-        elif self.attackFrame < 60:
-            self.image = self.skullImage
+        elif self.attackFrame < 42:
+            self.image = self.stunnedImage
         else:
             self.state = State.idle
             self.image = self.idleImage
             self.attackBox = None
 
     def attack4(self, pressed):
-        if self.attackFrame < 70:
-            self.image = self.magicImage
+        if self.attackFrame < 15:
+            self.image = self.idleImage
+            self.attackBox = None        
+        elif self.attackFrame < 20: 
+            self.image = self.jetpackImage
+            self.attackBox = [13, 32-7, 18, 32-3, 15]
+        elif self.attackFrame == 20:
+            self.image = self.jetpackImage
             self.attackBox = None
-            if self.attackFrame%10==0:
-                self.facingRight = not self.facingRight
+            self.yv=-20
+        elif self.attackFrame < 82:
+            self.image = self.stunnedImage
         else:
-            self.hp = min(self.maxhp, self.hp+30)
             self.state = State.idle
             self.image = self.idleImage
             self.attackBox = None
 
     def loadImages(self):
-        self.idleImage = self.load("idle3.png")
-        self.stunnedImage = self.load("stunned3.png")
-        self.kickImage = self.load("kick3.png")
-        self.skullImage = self.load("skull3.png")
-        self.projaImage = self.load("proja3.png")
-        self.projbImage = self.load("projb3.png")
-        self.magicImage = self.load("magic3.png")
+        self.idleImage = self.load("idle6.png")
+        self.stunnedImage = self.load("stunned6.png")
+        self.fireImage = self.load("fire6.png")
+        self.projbImage = self.load("proj6.png")
+        self.punchImage = self.load("punch6.png")
+        self.prePunchImage = self.load("prepunch6.png")
+        self.jetpackImage = self.load("jetpack6.png")
+        self.image = self.idleImage
+class Lizard(Player):
+
+    def __init__(self, x, y, facingRight, controls):
+        super(Lizard, self).__init__(x, y, facingRight, controls)
+        self.box = [16-3, 32-17, 16+3, 32-4]
+        self.init2()
+
+        self.attack1 = [
+        [12, self.prePunchImage],
+        [17, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 10]],
+        [20, self.punchImage],
+        [28, self.prePunchImage],
+        ]
+
+        self.attack2 = [
+        [20, self.prePunchImage],
+        [28, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 22,15]],
+        [30, self.punchImage],
+        [40, self.prePunchImage],
+        ]
+        self.tail = [
+        [12, self.preTailImage],
+        [25, self.tailImage, [7, 32-4, 10, 32-2, 14]],
+        [35, self.tailImage],
+        [55, self.idleImage],
+        ]
+    def attack3(self, pressed):
+        self.executeAttack(self.tail)
+
+    def attack4(self, pressed):
+        if self.attackFrame < 14:
+            self.image = self.preLickImage
+            self.attackBox = None        
+        elif self.attackFrame == 14: 
+            self.image = self.lickImage
+            self.attackBox = [25, 32-14, 27, 32-11, 0,-800]
+        elif self.attackFrame < 20:
+            self.attackBox = None
+            self.image = self.preLickImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+        #self.state = State.idle
+
+    def loadImages(self):
+        self.preLickImage=self.load("prelick7.png")
+        self.lickImage=self.load("lick7.png")
+        self.idleImage = self.load("idle7.png")
+        self.stunnedImage = self.load("stunned7.png")
+        self.prePunchImage = self.load("prepunch7.png")
+        self.punchImage = self.load("punch7.png")
+        self.preTailImage = self.load("prekick7.png")
+        self.tailImage = self.load("kick7.png")
         self.image = self.idleImage
 
-classes = [Puncher, Big, Green]
+classes = [Puncher, Big, Green,Bird,Robot]
 
 gameDisplay = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption("Fighting Game")
@@ -561,10 +694,13 @@ while jump_out == False:
     if len(Player.players)<2:
         time.sleep(1)
         Player.players = []
-        playerOne = random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        #playerTwo = random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_p,"3":pygame.K_o,"4":pygame.K_i})
-        #playerOne = Bird(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        playerTwo = Bird(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_p,"3":pygame.K_o,"4":pygame.K_i})
+        #random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        #random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+        #random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        #random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+
+        Robot(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        Lizard(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
     #pygame.event.get()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
