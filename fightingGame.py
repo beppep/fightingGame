@@ -23,7 +23,7 @@ class Projectile():
             self.box = [32-11, 18, 32-6, 32-9, 20]
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
-            self.box = [32-12, 16, 32-6, 20, 7]
+            self.box = [32-7, 16, 32-3, 19, 7]
     
     def keys(self, pressed):
         nevercalled
@@ -251,12 +251,14 @@ class Player():
         elif player == "right wall":
             self.facingRight = True
         else:
-            self.facingRight = not player.facingRight
+            self.facingRight = player.x>self.x #not player.facingRight
         self.state = State.stunned
+
+        #if isinstance(player, Player):
         self.hp -= damage
-        self.stun = max(self.stun, knockback)
+        self.stun = max(self.stun, abs(knockback))
         self.attackFrame = 0
-        self.yv=-knockback*0.2
+        self.yv=-abs(knockback*0.2)
         self.xv=knockback*(self.facingRight-0.5)*-0.2
         
 
@@ -572,18 +574,18 @@ class Robot(Player):
         self.maxhp = 200
         self.init2()
 
-        self.attack2 = [
-        [15, self.prePunchImage,None],
-        [30, self.punchImage, [24, 32-17, 27, 32-12, 18]],
-        [300, self.punchImage, [24, 32-17, 27, 32-12, 18],True],
-        [320, self.prePunchImage,None],
-        ]
-
         self.attack1 = [
         [33, self.stunnedImage,None],
         [38, self.fireImage, [20, 32-17, 24, 32-12, 58]],
         [45, self.fireImage, None],
         [60, self.stunnedImage, None],
+        ]
+
+        self.attack2 = [
+        [15, self.prePunchImage,None],
+        [30, self.punchImage, [24, 32-17, 27, 32-12, 7, 10]],
+        [300, self.punchImage, [24, 32-17, 27, 32-12, 7, 10],True],
+        [320, self.prePunchImage,None],
         ]
 
     def attack3(self, pressed):
@@ -629,6 +631,7 @@ class Robot(Player):
         self.prePunchImage = self.load("prepunch6.png")
         self.jetpackImage = self.load("jetpack6.png")
         self.image = self.idleImage
+
 class Lizard(Player):
 
     def __init__(self, x, y, facingRight, controls):
@@ -637,41 +640,50 @@ class Lizard(Player):
         self.init2()
 
         self.attack1 = [
-        [12, self.prePunchImage],
-        [17, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 10]],
-        [20, self.punchImage],
-        [28, self.prePunchImage],
+        [7, self.prePunchImage],
+        [12, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 10]],
+        [17, self.punchImage],
+        [24, self.prePunchImage],
         ]
 
         self.attack2 = [
         [20, self.prePunchImage],
-        [28, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 22,15]],
+        [28, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 22, 15]],
         [30, self.punchImage],
         [40, self.prePunchImage],
         ]
         self.tail = [
-        [12, self.preTailImage],
-        [25, self.tailImage, [7, 32-4, 10, 32-2, 14]],
-        [35, self.tailImage],
-        [55, self.idleImage],
+        [8, self.preTailImage],
+        [20, self.tailImage, [7, 32-4, 10, 32-2, 17, -17]],
+        [25, self.tailImage],
+        [35, self.idleImage],
+        ]
+        self.lick = [
+        [14, self.preLickImage],
+        [16, self.lickImage, [25, 32-14, 27, 32-10, 1,-30]],
+        [18, self.lickImage],
+        [20, self.preLickImage],
         ]
     def attack3(self, pressed):
         self.executeAttack(self.tail)
 
     def attack4(self, pressed):
+        self.executeAttack(self.lick)
+        """
         if self.attackFrame < 14:
             self.image = self.preLickImage
             self.attackBox = None        
         elif self.attackFrame == 14: 
             self.image = self.lickImage
-            self.attackBox = [25, 32-14, 27, 32-11, 0,-800]
+            self.attackBox = [25, 32-14, 27, 32-10, 5,-50]
         elif self.attackFrame < 20:
             self.attackBox = None
-            self.image = self.preLickImage
+            self.image = self.lickImage
         else:
             self.state = State.idle
             self.image = self.idleImage
             self.attackBox = None
+        """
         #self.state = State.idle
 
     def loadImages(self):
@@ -723,8 +735,10 @@ class Can(Player):
 
 classes = [Puncher, Big, Green, Bird, Robot, Lizard, Can]
 
+
 gameDisplay = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption("Fighting Game")
+pygame.display.set_icon(pygame.image.load(filepath+"idle.png"))
 jump_out = False
 while jump_out == False:
     if len(Player.players)<2:
@@ -735,8 +749,8 @@ while jump_out == False:
         random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
         random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
 
-        #Can(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        #Can(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+        #Puncher(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        #Lizard(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
     #pygame.event.get()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
