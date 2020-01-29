@@ -2,7 +2,7 @@ import pygame
 import time
 import random
 clock = pygame.time.Clock()
-filepath="C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
+filepath=""
 #C:/Users/brovar02/Documents/gameartstuff/
 
 class State():
