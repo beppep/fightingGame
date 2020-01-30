@@ -2,7 +2,7 @@ import pygame
 import time
 import random
 clock = pygame.time.Clock()
-filepath=""
+filepath="C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
 #C:/Users/brovar02/Documents/gameartstuff/
 
 class State():
@@ -66,6 +66,8 @@ class Player():
         Player.players.append(self)
         self.SCALE = 8
         self.flyingHeight=0
+        self.flying=0
+        self.onGround = True
         self.x = x
         self.xv = 0
         self.y = y
@@ -73,6 +75,7 @@ class Player():
         self.maxhp = 200
         self.stun = 0
         self.invincible=False
+        self.invisible=False
         self.state = State.idle
         self.attackFrame = 0
         self.holding = False
@@ -141,13 +144,16 @@ class Player():
 
     def keys(self, pressed):
         if(pressed[self.controls["d"]]):
-            self.xv=4
+            if self.onGround or self.flying:
+                self.xv=4
             self.facingRight = True
         elif(pressed[self.controls["a"]]):
-            self.xv=-4
+            if self.onGround or self.flying:
+                self.xv=-4
             self.facingRight = False
         else:
-            self.xv=0
+            if self.onGround or self.flying:
+                self.xv=0
 
         if(pressed[self.controls["w"]] and self.onGround):
             self.yv=-18
@@ -216,9 +222,10 @@ class Player():
             self.yv=0
             self.xv=0
             self.onGround=True
-        else:
-            self.yv+=1 #unindent if u wanna
-            #print("h") happens all the time?
+        #else:
+        #unindent makes bird wobble here
+        self.yv+=1
+            #happens all the time?
 
         self.hurtboxes = self.generateBox(self.box)
         if self.attackBox:
@@ -283,14 +290,14 @@ class Player():
 
     def draw(self):
         
-        image = self.image[self.facingRight]
-        gameDisplay.blit(image, (self.x, self.y))
-
-        if random.random()<.8:
+        if not self.invisible: #character
+            image = self.image[self.facingRight]
+            gameDisplay.blit(image, (self.x, self.y))
+        if random.random()<.8: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0],self.hitboxes[1],self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
-        if self.hp>0:
+        if self.hp>0 and not self.invisible: #health bars
             width=self.hurtboxes[2]-self.hurtboxes[0]
             pygame.draw.rect(gameDisplay, (255, 0, 0), \
             (self.hurtboxes[0],self.hurtboxes[1]-32+1,width,6), 0)
@@ -349,7 +356,6 @@ class Puncher(Player):
         self.prePunchImage = self.load("prepunch.png")
         self.punchImage = self.load("punch.png")
         self.image = self.idleImage
-
 class Big(Player):
 
     def __init__(self, x, y, facingRight, controls):
@@ -423,7 +429,6 @@ class Big(Player):
         self.punchImage = self.load("punch2.png")
         self.skullImage = self.load("skull2.png")
         self.image = self.idleImage
-
 class Green(Player):
 
     def __init__(self, x, y, facingRight, controls):
@@ -485,18 +490,94 @@ class Green(Player):
         self.projbImage = self.load("projb3.png")
         self.magicImage = self.load("magic3.png")
         self.image = self.idleImage
+class Tree(Player):
+            
+    def __init__(self, x, y, facingRight, controls):
+        super(Tree, self).__init__(x, y, facingRight, controls)
+        self.box = [16-3, 32-17, 16+3, 32-4]
+        self.init2()
 
+        self.attack1 = [
+        [13, self.preKickImage],
+        [18, self.kickImage, [32-16, 32-8-4, 32-9, 32-7, 17]],
+        [23, self.kickImage],
+        [28, self.preKickImage],
+        ]
+
+        self.attack2 = [
+        [25, self.preKickImage],
+        [33, self.kickImage, [32-16, 32-8-4, 32-9, 32-7, 40]],
+        [44, self.kickImage],
+        [55, self.preKickImage],
+        ]
+
+    def attack3(self, pressed):
+        if self.attackFrame < 10:
+            self.image = self.preGrowImage
+        elif self.attackFrame < 20:
+            self.image = self.growImage
+            self.invincible=True
+        elif self.attackFrame < 30:
+            self.invisible=True
+        elif self.attackFrame==30:
+            self.x = random.randint(100-13*8,900-19*8)
+            self.yv = 100
+        elif self.attackFrame < 40:
+            self.invisible = False
+        elif self.attackFrame < 50:
+            self.invincible=False
+            self.image = self.preGrowImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack4(self, pressed):
+        if self.attackFrame < 10:
+            self.image = self.preGrowImage
+        elif self.attackFrame < 20:
+            self.image = self.growImage
+            self.invincible=True
+        elif self.attackFrame < 100:
+            self.invisible=True
+            if not pressed[self.controls["4"]]:
+                self.attackFrame = 100
+        elif self.attackFrame < 110:
+            self.invisible = False
+        elif self.attackFrame < 120:
+            self.invincible=False
+            self.image = self.preGrowImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def loadImages(self):
+        self.idleImage = self.load("idle4.png")
+        self.stunnedImage = self.load("stunned4.png")
+        self.preKickImage = self.load("prekick4.png")
+        self.kickImage = self.load("kick4.png")
+        self.growImage = self.load("grow4.png")
+        self.preGrowImage = self.load("pregrow4.png")
+        self.image = self.idleImage
 class Bird(Player):
+
     def passive(self):
+        if self.flying:
+            if self.yv<-5:
+                self.yv=-5
+            else:
+                self.yv-=0.9
         if self.attackFrame%20<10:
             self.image = self.idlebImage
         else:
-
             self.image = self.idleImage
+
     def __init__(self, x, y, facingRight, controls):
         super(Bird, self).__init__(x, y, facingRight, controls)
         self.box = [16-3, 32-18, 16+3, 32-10]
         self.flyingHeight=4*self.SCALE
+        self.flying=0
         self.init2()
 
         self.attack1 = [
@@ -516,10 +597,10 @@ class Bird(Player):
 
     def attack3(self, pressed):
         if self.attackFrame < 38:
-            self.image = self.dodgeImage
+            self.image = self.preelImage #preel/dodgeImage
             self.attackBox = None
         elif self.attackFrame < 150:
-            self.image = self.dodgeImage
+            self.image = self.dodgeImage #preel/dodgeImage
             self.attackBox = None
             if not pressed[self.controls["3"]]:
                 self.holding = False
@@ -564,7 +645,6 @@ class Bird(Player):
         self.elaImage = self.load("ela5.png")
         self.elbImage = self.load("elb5.png")
         self.image = self.idleImage
-
 class Robot(Player):
 
     def __init__(self, x, y, facingRight, controls):
@@ -631,7 +711,6 @@ class Robot(Player):
         self.prePunchImage = self.load("prepunch6.png")
         self.jetpackImage = self.load("jetpack6.png")
         self.image = self.idleImage
-
 class Lizard(Player):
 
     def __init__(self, x, y, facingRight, controls):
@@ -660,7 +739,7 @@ class Lizard(Player):
         ]
         self.lick = [
         [14, self.preLickImage],
-        [16, self.lickImage, [25, 32-14, 27, 32-10, 1,-30]],
+        [16, self.lickImage, [25, 32-14, 28, 32-11, 1,-30]],
         [18, self.lickImage],
         [20, self.preLickImage],
         ]
@@ -696,7 +775,6 @@ class Lizard(Player):
         self.preTailImage = self.load("prekick7.png")
         self.tailImage = self.load("kick7.png")
         self.image = self.idleImage
-
 class Can(Player):
 
     def __init__(self, x, y, facingRight, controls):
@@ -732,9 +810,10 @@ class Can(Player):
         self.punchImage = self.load("punch8.png")
         self.image = self.idleImage
 
-
-classes = [Puncher, Big, Green, Bird, Robot, Lizard, Can]
-
+#CLASSIC
+#classes = [Puncher, Big, Green]
+#DLC
+classes = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Can]
 
 gameDisplay = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption("Fighting Game")
@@ -745,12 +824,12 @@ while jump_out == False:
         time.sleep(1)
         Player.players = []
         #random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        #random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+        #random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
         random.choice(classes)(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+        random.choice(classes)(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
 
-        #Puncher(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
-        #Lizard(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_DOWN,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
+        #Tree(200, 500, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b})
+        #Tree(600, 500, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p})
     #pygame.event.get()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
