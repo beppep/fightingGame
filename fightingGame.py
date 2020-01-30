@@ -2,8 +2,8 @@ import pygame
 import time
 import random
 clock = pygame.time.Clock()
-filepath="C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
-#C:/Users/brovar02/Documents/gameartstuff/
+filepath=""
+#"C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
 
 class State():
     idle=0
@@ -293,7 +293,7 @@ class Player():
         if not self.invisible: #character
             image = self.image[self.facingRight]
             gameDisplay.blit(image, (self.x, self.y))
-        if random.random()<.8: #yellow
+        if random.random()<.9: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0],self.hitboxes[1],self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
@@ -739,7 +739,7 @@ class Lizard(Player):
         ]
         self.lick = [
         [14, self.preLickImage],
-        [16, self.lickImage, [25, 32-14, 28, 32-11, 1,-30]],
+        [16, self.lickImage, [15, 32-13, 28, 32-12, 1,-30]],
         [18, self.lickImage],
         [20, self.preLickImage],
         ]
@@ -748,22 +748,6 @@ class Lizard(Player):
 
     def attack4(self, pressed):
         self.executeAttack(self.lick)
-        """
-        if self.attackFrame < 14:
-            self.image = self.preLickImage
-            self.attackBox = None        
-        elif self.attackFrame == 14: 
-            self.image = self.lickImage
-            self.attackBox = [25, 32-14, 27, 32-10, 5,-50]
-        elif self.attackFrame < 20:
-            self.attackBox = None
-            self.image = self.lickImage
-        else:
-            self.state = State.idle
-            self.image = self.idleImage
-            self.attackBox = None
-        """
-        #self.state = State.idle
 
     def loadImages(self):
         self.preLickImage=self.load("prelick7.png")
