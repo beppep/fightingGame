@@ -5,6 +5,19 @@ clock = pygame.time.Clock()
 filepath=""
 #"C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
 
+def initSound():
+    pygame.mixer.init(buffer=64)
+    Player.hitSound = pygame.mixer.Sound("soundeffect2.wav")
+    Player.lickSound = pygame.mixer.Sound("lickeffect.wav")
+    Player.lickSound.set_volume(0.2)
+    Player.growSound = pygame.mixer.Sound("grasseffect.wav")
+    Player.growSound.set_volume(0.2)
+    """
+    pygame.mixer.music.load("music.wav") #must be wav 16bit and stuff?
+    pygame.mixer.music.set_volume(0.02)
+    pygame.mixer.music.play(-1)
+    """
+
 class State():
     idle=0
     stunned=-1
@@ -249,6 +262,8 @@ class Player():
                     Projectile.projectiles.remove(player)
 
     def hurt(self, player, damage,knockback=-1):
+        Player.hitSound.set_volume(damage/100)
+        Player.hitSound.play()
         if(knockback==-1):
             knockback=damage
         if(self.invincible):
@@ -471,6 +486,8 @@ class Green(Player):
             self.attackBox = None
 
     def attack4(self, pressed):
+        if self.attackFrame == 1:
+            Player.growSound.play()
         if self.attackFrame < 90:
             self.image = self.magicImage
             self.attackBox = None
@@ -513,6 +530,8 @@ class Tree(Player):
         ]
 
     def attack3(self, pressed):
+        if self.attackFrame == 1:
+            Player.growSound.play()
         if self.attackFrame < 10:
             self.image = self.preGrowImage
         elif self.attackFrame < 15:
@@ -524,7 +543,9 @@ class Tree(Player):
             self.x += 500*(self.facingRight-0.5)
             self.y = 700 #far down
         elif self.attackFrame < 40:
-            self.invisible=True
+            pass
+        elif self.attackFrame == 40:
+            Player.growSound.play()
         elif self.attackFrame < 50:
             self.invisible = False
         elif self.attackFrame < 65:
@@ -536,6 +557,8 @@ class Tree(Player):
             self.attackBox = None
 
     def attack4(self, pressed):
+        if self.attackFrame == 1:
+            Player.growSound.play()
         if self.attackFrame < 10:
             self.image = self.preGrowImage
         elif self.attackFrame < 15:
@@ -545,6 +568,7 @@ class Tree(Player):
             self.invisible=True
             if not pressed[self.controls["4"]]:
                 self.attackFrame = 100
+                Player.growSound.play()
         elif self.attackFrame < 110:
             self.invisible = False
         elif self.attackFrame < 125:
@@ -599,7 +623,7 @@ class Bird(Player):
 
 
     def attack3(self, pressed):
-        if self.attackFrame < 38:
+        if self.attackFrame < 37:
             self.image = self.preelImage #preel/dodgeImage
             self.attackBox = None
         elif self.attackFrame < 150:
@@ -608,6 +632,9 @@ class Bird(Player):
             if not pressed[self.controls["3"]]:
                 self.holding = False
                 self.attackFrame = 150
+
+        elif self.attackFrame == 151:
+            Player.growSound.play()
 
         elif self.attackFrame < 180:
             self.image = self.elaImage
@@ -680,6 +707,8 @@ class Robot(Player):
         elif self.attackFrame == 14:
             self.image = self.fireImage
             Projectile.projectiles.append(Projectile(self))
+            Player.hitSound.set_volume(0.2)
+            Player.hitSound.play()
         elif self.attackFrame < 42:
             self.image = self.stunnedImage
         else:
@@ -742,11 +771,13 @@ class Lizard(Player):
         ]
         self.lick = [
         [14, self.preLickImage],
-        [16, self.lickImage, [15, 32-13, 28, 32-12, 1,-30]],
+        [16, self.lickImage, [15, 32-13, 28, 32-12, 0,-30]],
         [18, self.lickImage],
         [20, self.preLickImage],
         ]
     def attack3(self, pressed):
+        if self.attackFrame == 5:
+            Player.lickSound.play()
         self.executeAttack(self.lick)
 
     def attack4(self, pressed):
@@ -805,6 +836,9 @@ DLCclasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Can]
 gameDisplay = pygame.display.set_mode((1000, 600))
 pygame.display.set_caption("Fighting Game")
 pygame.display.set_icon(pygame.image.load(filepath+"idle.png"))
+
+initSound()
+
 jump_out = False
 while jump_out == False:
     if len(Player.players)<2:
