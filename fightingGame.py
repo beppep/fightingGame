@@ -15,7 +15,7 @@ def initSound():
     Player.ultSound = pygame.mixer.Sound("ult.wav")
     Player.ultSound.set_volume(0.1)
     Player.bzzzSound = pygame.mixer.Sound("bzzzEffect.wav")
-    Player.bzzzSound.set_volume(0.2)
+    Player.bzzzSound.set_volume(0.1)
     """
     pygame.mixer.music.load("music.wav") #must be wav 16bit and stuff?
     pygame.mixer.music.set_volume(0.02)
@@ -121,6 +121,10 @@ class Projectile():
                     if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
                         if self in Projectile.projectiles:
                             Projectile.projectiles.remove(self)
+                        if type(player) in [Rockman, Lizard] and player.state==3:
+                            player.hp=min(player.hp+30, player.maxhp)
+                            Player.lickSound.play()
+                            Player.growSound.play()
                         if isinstance(player, Projectile) and player in Projectile.projectiles:
                             Projectile.projectiles.remove(player)
 
@@ -1044,6 +1048,74 @@ class Lizard(Player):
     punchImage = Player.load("punch7.png")
     preTailImage = Player.load("prekick7.png")
     tailImage = Player.load("kick7.png")
+class Rockman(Player):
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super(Rockman, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [11, 15, 20, 28]
+        self.image = self.idleImage
+        self.init2()
+
+        self.attack1 = [
+        [6, self.prePunchImage],
+        [9, self.punchImage, [18, 23, 22, 27, 8, -40, 8]],
+        [14, self.punchImage],
+        [18, self.punchImage, [21, 17, 24, 22, 10]],
+        [25, self.prePunchImage],
+        ]
+
+        self.attack2 = [
+        [21, self.prePunchImage],
+        [25, self.punchImage, [18, 23, 22, 27, 11, -50, 17]],
+        [38, self.prePunchImage],
+        [45, self.punchImage, [21, 17, 24, 22, 15, -60, 20]],
+        [54, self.prePunchImage],
+        ]
+
+        self.lick = [
+        [5, self.preLickImage],
+        [8, self.lickImage, [20, 9, 24, 13, 25]],
+        [14, self.lickImage],
+        [20, self.preLickImage],
+        ]
+
+        self.grass = [
+        [29, self.preGrassImage],
+        [49, self.grassImage, [21, 19, 32, 24, 5, 5]],
+        [54, self.grassImage, [21, 19, 32, 24, 15, 25]],
+        [60, self.preGrassImage],
+        ]
+
+        self.ultimate = [
+        [50, self.fireImage, [9,6,24,30, 25, 50], True],
+        ]
+
+    def attack3(self, pressed):
+        if self.attackFrame==1:
+            Player.lickSound.play()
+        self.executeAttack(self.lick, not self.pressed["3"])
+
+    def attack4(self, pressed):
+        if self.attackFrame==20:
+            Player.bzzzSound.play()
+            Player.growSound.play()
+        self.executeAttack(self.grass, not self.pressed["4"])
+        #self.state = State.idle (??
+
+    def attack5(self):
+        if self.attackFrame==1:
+            Player.ultSound.play()
+        self.executeAttack(self.ultimate, not self.pressed["5"])
+
+    idleImage = Player.load("idle11.png")
+    stunnedImage = Player.load("stunned11.png")
+    fireImage = Player.load("fire11.png")
+    prePunchImage = Player.load("prepunch11.png")
+    punchImage = Player.load("punch11.png")
+    preGrassImage = Player.load("pregrass11.png")
+    grassImage = Player.load("grass11.png")
+    preLickImage = Player.load("prelick11.png")
+    lickImage = Player.load("lick11.png")
 class Can(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -1193,7 +1265,7 @@ class Frog(Player):
                 self.attackFrame = 500
         elif self.attackFrame < 510:
             self.image = self.jumpImage
-            self.attackBox = [16-6, 32-8, 16+5, 32-3, self.attackFrame//10+20, self.attackFrame//10+60]
+            self.attackBox = [16-6, 32-8, 16+5, 32-3, self.attackFrame//15+10, self.attackFrame//15+40]
         elif self.attackFrame < 530:
             self.image = self.jumpImage
             self.attackBox = None
@@ -1296,7 +1368,7 @@ class Monster(Player):
     punchImage = Player.load("punch10.png")
     projbImage = Player.load("proj10.png")
 
-allClasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Can, Frog, Monster]
+allClasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Rockman, Rockman, Rockman, Rockman, Rockman, Can, Frog, Monster]
 
 def restart():
     Player.players = []
@@ -1374,9 +1446,9 @@ while State.jump_out == False:
         choices = restart()
 
         # HERE * * * * * * * * *
-        #choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+        choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
         #choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-        choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
+        #choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         for i in range(1):
             #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
@@ -1409,7 +1481,7 @@ quit()
 
 
 """
-#ella gjorde kutty så ru vet!!!!/ella
+#ella gjorde frog så ru vet!!!!/ella
 
 
 
