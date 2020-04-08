@@ -225,6 +225,9 @@ class Player():
             if self.hp<=0:
                 Player.players.remove(self)
 
+        if random.random()<0.1:
+            self.ultCharge+=1
+
     def getPressed(self, pressed):
         if self.random:
             target = random.choice(Player.players)
@@ -241,10 +244,12 @@ class Player():
             triggers = self.joystick.get_axis(2) #lt - rt but 0 = -3.01
             self.pressed["d"] = (x>0.5)
             self.pressed["a"] = (x<-0.5)
-            self.pressed["2"] = (triggers<-0.5 and triggers>-2)
-            self.pressed["1"] = (triggers>0.5)
+            self.pressed["2"] = self.joystick.get_button(3) #(triggers<-0.5 and triggers>-2)
+            self.pressed["1"] = self.joystick.get_button(2) #(triggers>0.5)
             for i in ["w","3","4","5"]:
                 self.pressed[i] = (self.joystick.get_button(self.controls[i]))
+            self.pressed["3"] += (triggers>0.5)
+            self.pressed["4"] += (triggers<-0.5 and triggers>-2)
         else:
             for i in ["a","d","w","1","2","3","4","5"]:
                 self.pressed[i] = (pressed[self.controls[i]])
@@ -282,7 +287,7 @@ class Player():
             self.state = 4
             self.attackFrame = 0
         
-        if(self.pressed["5"] and self.ultCharge>self.CHARGE):
+        if(self.pressed["5"] and self.ultCharge>self.CHARGE and not isinstance(self,Lizard)):
             self.state = 5
             self.attackFrame = 0
             self.ultCharge = 0
@@ -380,13 +385,13 @@ class Player():
         if stun==None:
             stun=knockback
         self.facingRight = player.x>self.x #not player.facingRight
+
+        self.hp -= damage
         if stun:
             self.state = State.stunned
             self.attackFrame = 0
         elif self.hp<=0:
             Player.players.remove(self)
-
-        self.hp -= damage
         self.stun = max(self.stun, abs(stun))
         self.yv=-abs(knockback*0.2)
         self.xv=knockback*(self.facingRight-0.5)*-0.2
@@ -510,7 +515,7 @@ class Big(Player):
         self.attack1 = [
         [12, self.prePunchImage],
         [15, self.midPunchImage],
-        [30, self.punchImage, [16, 16, 32-6, 32-8, 33]],
+        [30, self.punchImage, [16, 16, 32-6, 32-8, 33, 50, 30]],
         [45, self.punchImage],
         [52, self.midPunchImage],
         [60, self.prePunchImage],
@@ -518,11 +523,12 @@ class Big(Player):
 
         self.attack2 = [
         [30, self.prePunchImage, None],
-        [40, self.midPunchImage, None],
-        [50, self.punchImage, [16, 16, 32-6, 32-8, 80]],
-        [70, self.punchImage, None],
-        [80, self.midPunchImage, None],
-        [90, self.prePunchImage, None],
+        [130, self.prePunchImage, None, True],
+        [140, self.midPunchImage, None],
+        [150, self.punchImage, [16, 16, 32-6, 32-8, 80, 100, 80]],
+        [170, self.punchImage, None],
+        [180, self.midPunchImage, None],
+        [190, self.prePunchImage, None],
         ]
 
         self.skull = [
@@ -604,7 +610,7 @@ class Green(Player):
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Green, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-14, 16+3, 32-4]
-        self.maxhp = 150
+        self.maxhp = 200
         self.image = Green.idleImage
         self.init2()
 
@@ -760,7 +766,7 @@ class Tree(Player):
             new.hp = self.hp
             new.random = self.random
             self.CHARGE = 200
-            self.hp=1
+            self.hp=0
             #move forward
             self.image = self.growImage
             self.invincible=True
@@ -787,7 +793,7 @@ class Bird(Player):
     def passive(self):
         if(self.pressed["5"] and self.ultCharge>self.CHARGE): #ult
             self.ultCharge = 0
-            self.yv-=25
+            self.yv=-22
             Player.ultSound.play()
 
         if self.attackFrame%20<10: #idle animation
@@ -884,7 +890,7 @@ class Robot(Player):
 
         self.attack1 = [
         [30, self.stunnedImage,None],
-        [38, self.fireImage, [20, 32-17, 24, 32-12, 58, 58]],
+        [38, self.fireImage, [20, 32-17, 24, 32-12, 50, 58]],
         [45, self.fireImage, None],
         [60, self.stunnedImage, None],
         ]
@@ -997,7 +1003,7 @@ class Lizard(Player):
 
         self.attack2 = [
         [9, self.prePunchImage],
-        [18, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 22, 15]],
+        [18, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 22, 18]],
         [33, self.punchImage],
         [45, self.prePunchImage],
         ]
@@ -1022,13 +1028,13 @@ class Lizard(Player):
         self.executeAttack(self.tail)
 
     def passive(self):
-        if self.pressed["5"] and self.ultCharge>self.CHARGE:
+        if self.pressed["5"] and self.ultCharge>self.CHARGE and not self.state==State.idle:
             Player.ultSound.play()
+            self.ultCharge = 0
+            self.stun = 0
             self.state = State.idle
             self.image = self.idleImage
             self.attackBox = None
-            self.ultCharge = 0
-            self.stun = 0
 
     preLickImage=Player.load("prelick7.png")
     lickImage=Player.load("lick7.png")
@@ -1065,7 +1071,7 @@ class Can(Player):
             Player.growSound.play()
         elif self.attackFrame<20:
             self.image = self.waterImage
-            self.attackBox = [13,31,16,32, 3, 0, 0]
+            self.attackBox = [13,31,16,32, 2, 0, 0]
             self.yv-=1.2
             self.hp-=0.1
             if self.hp<=0:
@@ -1096,7 +1102,7 @@ class Can(Player):
 class Frog(Player):
 
     def passive(self):
-        if(self.pressed["5"] and self.ultCharge>self.CHARGE):
+        if(self.pressed["5"] and self.ultCharge>self.CHARGE and not self.stun):
             self.state = 5
             self.attackFrame = 0
             self.ultCharge = 0
@@ -1175,19 +1181,19 @@ class Frog(Player):
         if self.attackFrame < 15: 
             self.image = self.stunnedImage
             self.facingRight = not self.facingRight
-            self.xv = 0
             self.yv = -4
-        if self.attackFrame == 15:
+        elif self.attackFrame == 15:
             self.image = self.preLickImage
             self.xv = 0
-            self.yv = 8
+            self.yv = 16
         elif self.attackFrame < 500:
+            self.yv = min(16, self.yv) #max speed but can be knocked for fun
             self.image = self.idleImage
             if self.onGround:
                 self.attackFrame = 500
         elif self.attackFrame < 510:
             self.image = self.jumpImage
-            self.attackBox = [16-6, 32-8, 16+5, 32-3, 60, 100]
+            self.attackBox = [16-6, 32-8, 16+5, 32-3, self.attackFrame//10+20, self.attackFrame//10+60]
         elif self.attackFrame < 530:
             self.image = self.jumpImage
             self.attackBox = None
@@ -1368,13 +1374,13 @@ while State.jump_out == False:
         choices = restart()
 
         # HERE * * * * * * * * *
-        choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-        #random.choice(class3)(400, 100, False, {"w":0,"3":4,"4":5,"5":3}, sticks[0])
+        #choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+        #choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
-        for i in range(0):
+        for i in range(1):
             #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-            choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
         # HERE * * * * * * * * *
 
