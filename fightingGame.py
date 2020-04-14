@@ -933,7 +933,7 @@ class Robot(Player):
         ]
 
     def attack2(self, pressed):
-        self.executeAttack(self.attack2, not self.pressed["2"])
+        self.executeAttack(self.second, not self.pressed["2"])
         if self.attackFrame==15:
             Player.bzzzSound.play()
         if self.attackFrame==81:
@@ -1312,12 +1312,12 @@ class Frog(Player):
         [38, self.preLickImage],
         ]
 
-    def attack1(self):
-        self.executeAttack(self.attack1, not self.pressed["1"])
+    def attack1(self, pressed):
+        self.executeAttack(self.first, not self.pressed["1"])
         if self.attackFrame==1:
             Player.lickSound.play()
-    def attack2(self):
-        self.executeAttack(self.attack2, not self.pressed["2"])
+    def attack2(self, pressed):
+        self.executeAttack(self.second, not self.pressed["2"])
         if self.attackFrame==1:
             Player.lickSound.play()
 
