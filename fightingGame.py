@@ -124,12 +124,14 @@ class Projectile():
                     if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
                         if self in Projectile.projectiles:
                             Projectile.projectiles.remove(self)
-                        if type(player) in [Rockman, Lizard] and player.state==3:
-                            player.hp=min(player.hp+30, player.maxhp)
-                            Player.lickSound.play()
-                            Player.growSound.play()
-                        if isinstance(player, Projectile) and player in Projectile.projectiles:
-                            Projectile.projectiles.remove(player)
+                        if isinstance(player, Player):
+                            if (player.state==3 and type(player) in [Golem, Lizard]) or (player.state in [1,2] and type(player) in [Frog, Monster]):
+                                player.hp=min(player.hp+30, player.maxhp)
+                                Player.lickSound.play()
+                                Player.growSound.play()
+                        else: #is proj
+                            if player in Projectile.projectiles:
+                                Projectile.projectiles.remove(player)
 
 class Player():
     SCALE=8
@@ -255,7 +257,7 @@ class Player():
             #self.pressed["a"] = self.pressed["a"] ^ (random.randint(0,20)==0)
             self.pressed["d"] = not self.pressed["a"]
             for i in ["w","1","2","3","4","5"]:
-                self.pressed[i] = (random.randint(0,50)==0)# ^ self.pressed[i]
+                self.pressed[i] = (random.randint(0,40)==0)# ^ self.pressed[i]
         elif self.joystick:
             x = self.joystick.get_axis(0)
             triggers = self.joystick.get_axis(2) #lt - rt but 0 = -3.01
@@ -379,18 +381,18 @@ class Player():
             self.hitboxes = None
 
         #self.attackBox= None
-
-        for player in Player.players+Projectile.projectiles:
-            if player.hitboxes and not player == self and not self.stun:
-                if self.collide(player.hitboxes):
-                    if(len(player.hitboxes)==7):
-                        self.hurt(player, player.hitboxes[4],knockback=player.hitboxes[5],stun=player.hitboxes[6])
-                    elif(len(player.hitboxes)==6):
-                        self.hurt(player, player.hitboxes[4],knockback=player.hitboxes[5]) # player/player.owner for ult charge. bad for pos
-                    else:
-                        self.hurt(player, player.hitboxes[4])# .owner for ult charge. bad for pos
-                    if isinstance(player, Projectile):
-                        Projectile.projectiles.remove(player)
+        if not self.stun:
+            for player in Player.players+Projectile.projectiles:
+                if player.hitboxes and not player == self:
+                    if self.collide(player.hitboxes):
+                        if(len(player.hitboxes)==7):
+                            self.hurt(player, player.hitboxes[4],knockback=player.hitboxes[5],stun=player.hitboxes[6])
+                        elif(len(player.hitboxes)==6):
+                            self.hurt(player, player.hitboxes[4],knockback=player.hitboxes[5]) # player/player.owner for ult charge. bad for pos
+                        else:
+                            self.hurt(player, player.hitboxes[4])# .owner for ult charge. bad for pos
+                        if isinstance(player, Projectile):
+                            Projectile.projectiles.remove(player)
 
     def hurt(self, player, damage, knockback=None, stun=None): #player arg is stupid here. Just send direction or x coord.
         if(self.invincible):
@@ -529,6 +531,7 @@ class Big(Player):
         super(Big, self).__init__(x, y, facingRight, controls,joystick)
         self.box = [16-4, 12, 16+4, 32-4]
         self.image = Big.idleImage
+        #self.xspeed=1
         self.init2()
 
         self.first = [
@@ -750,7 +753,7 @@ class Tree(Player):
             self.x += 8*(self.facingRight-0.5)
             self.y = -300 #far up
             if not self.pressed["3"] or self.attackFrame == 99:
-                self.attackFrame = 100
+                self.attackFrame = 99
                 Player.growSound.play()
                 self.facingRight = not self.facingRight
                 self.y = 504 #far down
@@ -775,7 +778,7 @@ class Tree(Player):
         elif self.attackFrame < 100:
             self.invisible=True
             if not self.pressed["4"] or self.attackFrame == 99:
-                self.attackFrame = 100
+                self.attackFrame = 99
                 Player.growSound.play()
         elif self.attackFrame < 107:
             self.invisible = False
@@ -816,7 +819,7 @@ class Tree(Player):
     preKickImage = Player.load("prekick4.png")
     kickImage = Player.load("kick4.png")
     growImage = Player.load("grow4.png")
-    preGrowImage = Player.load("pregrow4.png")
+    preGrowImage = Player.load("pregrow4.png") 
 
 class Bird(Player):
 
@@ -865,9 +868,9 @@ class Bird(Player):
             self.image = self.preelImage #preel/dodgeImage
             self.attackBox = None
             if not self.pressed["3"]:
-                self.attackFrame = 150
+                self.attackFrame = 149
 
-        elif self.attackFrame == 151:
+        elif self.attackFrame == 150:
             Player.bzzzSound.play()
 
         elif self.attackFrame < 180:
@@ -1057,10 +1060,10 @@ class Lizard(Player):
     punchImage = Player.load("punch7.png")
     preTailImage = Player.load("prekick7.png")
     tailImage = Player.load("kick7.png")
-class Rockman(Player):
+class Golem(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
-        super(Rockman, self).__init__(x, y, facingRight, controls, joystick)
+        super(Golem, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [11, 15, 20, 28]
         self.image = self.idleImage
         self.init2()
@@ -1253,15 +1256,18 @@ class Can(Player):
     def attack3(self, pressed):
         if self.attackFrame == 1:
             Player.growSound.play()
-        elif self.attackFrame<20:
+        elif self.attackFrame<100:
             self.image = self.waterImage
             self.attackBox = [13,31,16,32, 2, 0, 0]
-            self.yv-=1.2
+            self.yv-=1
+            self.yv=self.yv*0.95
             self.hp-=0.1
             if self.hp<=0:
                 Player.players.remove(self)
             self.facingRight = not self.facingRight
-        elif self.attackFrame<29:
+            if not (self.pressed["3"] or self.pressed["4"]):
+                self.attackFrame=99
+        elif self.attackFrame<109:
             self.image = self.idleImage
             self.attackBox = None
         else:
@@ -1449,10 +1455,10 @@ class Monster(Player):
         if self.attackFrame==1:
             Player.ultSound.play()
             Player.growSound.play()
-        if self.attackFrame < 57:
-            self.yv+=0.5
+        if self.attackFrame < 217:
+            self.yv-=0.5
             self.image = self.prePunchImage
-            self.hp=min(self.hp+1, self.maxhp)
+            self.hp=min(self.hp+0.7, self.maxhp)
             self.facingRight = not self.facingRight
         else:
             self.state = State.idle
@@ -1464,7 +1470,7 @@ class Monster(Player):
     punchImage = Player.load("punch10.png")
     projbImage = Player.load("proj10.png")
 
-allClasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Rockman, Ninja, Can, Frog, Monster]
+allClasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Can, Frog, Monster]
 
 def restart():
     Player.players = []
@@ -1548,8 +1554,8 @@ while State.jump_out == False:
         
         AiFocus = True
         for i in range(0):
-            random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-            #choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
         # HERE * * * * * * * * *
 
