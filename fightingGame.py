@@ -1169,13 +1169,6 @@ class Ninja(Player):
         [42, self.prePunchImage],
         ]
 
-        self.hair = [
-        [5, self.idleImage],
-        [8, self.hairImage, [5, 16, 9, 24, 10,25]],
-        [14, self.hairImage],
-        [25, self.idleImage],
-        ]
-
         self.ultimate = [
         [5, self.idleImage],
         [10, self.footImage,[19, 23, 23, 28, 10,-35,5]],
@@ -1203,7 +1196,7 @@ class Ninja(Player):
         elif self.attackFrame < 14:
             self.image = self.hairImage
             self.attackBox = None
-        elif self.attackFrame < 30:
+        elif self.attackFrame < 29:
             self.image = self.idleImage
         else:
             self.state = State.idle
