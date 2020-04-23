@@ -1522,7 +1522,7 @@ def restart():
 gameDisplay = pygame.display.set_mode((1000, 600))
 backgrounds = []
 for name in ["background.png","background2.png"]:
-    background = pygame.image.load(filepath+name)
+    background = pygame.image.load(os.path.join(filepath, "textures", name))
     background = pygame.transform.scale(background, (1000, 600))
     backgrounds.append(background)
 pygame.display.set_caption("Fighting Game")
