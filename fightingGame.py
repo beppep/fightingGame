@@ -1,6 +1,7 @@
 import pygame
 import time
 import random
+import os
 clock = pygame.time.Clock()
 filepath=""
 #"C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
@@ -433,8 +434,8 @@ class Player():
                 return True
         return False
 
-    def load(name):
-        image = pygame.image.load(filepath+name)
+    def load(playerName, textureName):
+        image = pygame.image.load(os.path.join(filepath, "textures", playerName, textureName))
         image = pygame.transform.scale(image, (Player.SCALE*32, Player.SCALE*32))
         return (pygame.transform.flip(image, True, False), image)
 
@@ -520,11 +521,11 @@ class Puncher(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle.png")
-    stunnedImage = Player.load("stunned.png")
-    longPunchImage = Player.load("longpunch.png")
-    prePunchImage = Player.load("prepunch.png")
-    punchImage = Player.load("punch.png")
+    idleImage = Player.load("puncher", "idle.png")
+    stunnedImage = Player.load("puncher", "stunned.png")
+    longPunchImage = Player.load("puncher", "longpunch.png")
+    prePunchImage = Player.load("puncher", "prepunch.png")
+    punchImage = Player.load("puncher", "punch.png")
 class Big(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -630,12 +631,12 @@ class Big(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle2.png")
-    stunnedImage = Player.load("stunned2.png")
-    prePunchImage = Player.load("prepunch2.png")
-    midPunchImage = Player.load("midpunch2.png")
-    punchImage = Player.load("punch2.png")
-    skullImage = Player.load("skull2.png")
+    idleImage = Player.load("big", "idle.png")
+    stunnedImage = Player.load("big", "stunned.png")
+    prePunchImage = Player.load("big", "prepunch.png")
+    midPunchImage = Player.load("big", "midpunch.png")
+    punchImage = Player.load("big", "punch.png")
+    skullImage = Player.load("big", "skull.png")
 class Green(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -710,13 +711,13 @@ class Green(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle3.png")
-    stunnedImage = Player.load("stunned3.png")
-    kickImage = Player.load("kick3.png")
-    skullImage = Player.load("skull3.png")
-    projaImage = Player.load("proja3.png")
-    projbImage = Player.load("projb3.png")
-    magicImage = Player.load("magic3.png")
+    idleImage = Player.load("green", "idle.png")
+    stunnedImage = Player.load("green", "stunned.png")
+    kickImage = Player.load("green", "kick.png")
+    skullImage = Player.load("green", "skull.png")
+    projaImage = Player.load("green", "proja.png")
+    projbImage = Player.load("green", "projb.png")
+    magicImage = Player.load("green", "magic.png")
 class Tree(Player):
             
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -814,12 +815,12 @@ class Tree(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle4.png")
-    stunnedImage = Player.load("stunned4.png")
-    preKickImage = Player.load("prekick4.png")
-    kickImage = Player.load("kick4.png")
-    growImage = Player.load("grow4.png")
-    preGrowImage = Player.load("pregrow4.png") 
+    idleImage = Player.load("tree", "idle.png")
+    stunnedImage = Player.load("tree", "stunned.png")
+    preKickImage = Player.load("tree", "prekick.png")
+    kickImage = Player.load("tree", "kick.png")
+    growImage = Player.load("tree", "grow.png")
+    preGrowImage = Player.load("tree", "pregrow.png")
 
 class Bird(Player):
 
@@ -904,15 +905,15 @@ class Bird(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle5.png")
-    idlebImage = Player.load("idleb5.png")
-    stunnedImage = Player.load("stunned5.png")
-    prePunchImage = Player.load("prepunch5.png")
-    punchImage = Player.load("punch5.png")
-    dodgeImage = Player.load("dodge5.png")
-    preelImage = Player.load("preel5.png")
-    elaImage = Player.load("ela5.png")
-    elbImage = Player.load("elb5.png")
+    idleImage = Player.load("bird", "idle.png")
+    idlebImage = Player.load("bird", "idleb.png")
+    stunnedImage = Player.load("bird", "stunned.png")
+    prePunchImage = Player.load("bird", "prepunch.png")
+    punchImage = Player.load("bird", "punch.png")
+    dodgeImage = Player.load("bird", "dodge.png")
+    preelImage = Player.load("bird", "preel.png")
+    elaImage = Player.load("bird", "ela.png")
+    elbImage = Player.load("bird", "elb.png")
 class Robot(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -994,13 +995,13 @@ class Robot(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle6.png")
-    stunnedImage = Player.load("stunned6.png")
-    fireImage = Player.load("fire6.png")
-    projbImage = Player.load("proj6.png")
-    punchImage = Player.load("punch6.png")
-    prePunchImage = Player.load("prepunch6.png")
-    jetpackImage = Player.load("jetpack6.png")
+    idleImage = Player.load("robot", "idle.png")
+    stunnedImage = Player.load("robot", "stunned.png")
+    fireImage = Player.load("robot", "fire.png")
+    projbImage = Player.load("robot", "proj.png")
+    punchImage = Player.load("robot", "punch.png")
+    prePunchImage = Player.load("robot", "prepunch.png")
+    jetpackImage = Player.load("robot", "jetpack.png")
 class Lizard(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -1052,14 +1053,14 @@ class Lizard(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    preLickImage=Player.load("prelick7.png")
-    lickImage=Player.load("lick7.png")
-    idleImage = Player.load("idle7.png")
-    stunnedImage = Player.load("stunned7.png")
-    prePunchImage = Player.load("prepunch7.png")
-    punchImage = Player.load("punch7.png")
-    preTailImage = Player.load("prekick7.png")
-    tailImage = Player.load("kick7.png")
+    preLickImage=Player.load("lizard", "prelick.png")
+    lickImage=Player.load("lizard", "lick.png")
+    idleImage = Player.load("lizard", "idle.png")
+    stunnedImage = Player.load("lizard", "stunned.png")
+    prePunchImage = Player.load("lizard", "prepunch.png")
+    punchImage = Player.load("lizard", "punch.png")
+    preTailImage = Player.load("lizard", "prekick.png")
+    tailImage = Player.load("lizard", "kick.png")
 class Golem(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1119,15 +1120,15 @@ class Golem(Player):
             Player.ultSound.play()
         self.executeAttack(self.ultimate, not self.pressed["5"])
 
-    idleImage = Player.load("idle11.png")
-    stunnedImage = Player.load("stunned11.png")
-    fireImage = Player.load("fire11.png")
-    prePunchImage = Player.load("prepunch11.png")
-    punchImage = Player.load("punch11.png")
-    preGrassImage = Player.load("pregrass11.png")
-    grassImage = Player.load("grass11.png")
-    preLickImage = Player.load("prelick11.png")
-    lickImage = Player.load("lick11.png")
+    idleImage = Player.load("golem", "idle.png")
+    stunnedImage = Player.load("golem", "stunned.png")
+    fireImage = Player.load("golem", "fire.png")
+    prePunchImage = Player.load("golem", "prepunch.png")
+    punchImage = Player.load("golem", "punch.png")
+    preGrassImage = Player.load("golem", "pregrass.png")
+    grassImage = Player.load("golem", "grass.png")
+    preLickImage = Player.load("golem", "prelick.png")
+    lickImage = Player.load("golem", "lick.png")
 class Ninja(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1216,20 +1217,20 @@ class Ninja(Player):
             Player.ultSound.play()
         self.executeAttack(self.ultimate)
 
-    idleImage = Player.load("idle12.png")
-    stunnedImage = Player.load("stunned12.png")
-    fireImage = Player.load("fire12.png")
-    prePunchImage = Player.load("prepunch12.png")
-    punchImage = Player.load("punch12.png")
-    hairImage = Player.load("hair12.png")
-    projbImage = Player.load("proj12.png")
+    idleImage = Player.load("ninja", "idle.png")
+    stunnedImage = Player.load("ninja", "stunned.png")
+    fireImage = Player.load("ninja", "fire.png")
+    prePunchImage = Player.load("ninja", "prepunch.png")
+    punchImage = Player.load("ninja", "punch.png")
+    hairImage = Player.load("ninja", "hair.png")
+    projbImage = Player.load("ninja", "proj.png")
     
-    footImage = Player.load("foot12.png")
-    armImage = Player.load("arm12.png")
-    rise1Image = Player.load("rise12.png")
-    rise2Image = Player.load("2rise12.png")
-    rise3Image = Player.load("3rise12.png")
-    rise4Image = Player.load("4rise12.png")
+    footImage = Player.load("ninja", "foot.png")
+    armImage = Player.load("ninja", "arm.png")
+    rise1Image = Player.load("ninja", "rise1.png")
+    rise2Image = Player.load("ninja", "rise2.png")
+    rise3Image = Player.load("ninja", "rise3.png")
+    rise4Image = Player.load("ninja", "rise4.png")
 
 class Can(Player):
 
@@ -1284,11 +1285,11 @@ class Can(Player):
         self.image = self.prePunchImage
         self.state = State.idle
 
-    idleImage = Player.load("idle8.png")
-    stunnedImage = Player.load("stunned8.png")
-    prePunchImage = Player.load("prepunch8.png")
-    punchImage = Player.load("punch8.png")
-    waterImage = Player.load("water8.png")
+    idleImage = Player.load("can", "idle.png")
+    stunnedImage = Player.load("can", "stunned.png")
+    prePunchImage = Player.load("can", "prepunch.png")
+    punchImage = Player.load("can", "punch.png")
+    waterImage = Player.load("can", "water.png")
 class Frog(Player):
 
     def passive(self):
@@ -1400,11 +1401,11 @@ class Frog(Player):
             self.image = self.idleImage
             self.attackBox = None
 
-    idleImage = Player.load("idle9.png")
-    stunnedImage = Player.load("stunned9.png")
-    preLickImage = Player.load("prelick9.png")
-    lickImage = Player.load("lick9.png")
-    jumpImage = Player.load("jump.png")
+    idleImage = Player.load("frog", "idle.png")
+    stunnedImage = Player.load("frog", "stunned.png")
+    preLickImage = Player.load("frog", "prelick.png")
+    lickImage = Player.load("frog", "lick.png")
+    jumpImage = Player.load("frog", "jump.png")
 class Monster(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -1464,11 +1465,11 @@ class Monster(Player):
             self.state = State.idle
             self.image = self.idleImage
 
-    idleImage = Player.load("idle10.png")
-    stunnedImage = Player.load("stunned10.png")
-    prePunchImage = Player.load("prepunch10.png")
-    punchImage = Player.load("punch10.png")
-    projbImage = Player.load("proj10.png")
+    idleImage = Player.load("monster", "idle.png")
+    stunnedImage = Player.load("monster", "stunned.png")
+    prePunchImage = Player.load("monster", "prepunch.png")
+    punchImage = Player.load("monster", "punch.png")
+    projbImage = Player.load("monster", "proj.png")
 
 allClasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Can, Frog, Monster]
 
@@ -1523,7 +1524,7 @@ for name in ["background.png","background2.png"]:
     background = pygame.transform.scale(background, (1000, 600))
     backgrounds.append(background)
 pygame.display.set_caption("Fighting Game")
-pygame.display.set_icon(pygame.image.load(filepath+"idle.png"))
+pygame.display.set_icon(pygame.image.load(os.path.join(filepath, "textures", "puncher", "idle.png")))
 Platform.generate()
 
 initSound()
