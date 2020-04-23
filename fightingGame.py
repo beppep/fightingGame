@@ -6,16 +6,18 @@ clock = pygame.time.Clock()
 filepath=""
 #"C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
 
+SOUND_PATH = os.path.join(filepath, "sounds")
+
 def initSound():
     pygame.mixer.init(buffer=32)
-    Player.hitSound = pygame.mixer.Sound("soundeffect2.wav")
-    Player.lickSound = pygame.mixer.Sound("lickeffect.wav")
+    Player.hitSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "soundeffect2.wav"))
+    Player.lickSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "lickeffect.wav"))
     Player.lickSound.set_volume(0.2)
-    Player.growSound = pygame.mixer.Sound("grasseffect.wav")
+    Player.growSound = pygame.mixer.Sound(os.path.join(SOUND_PATH,"grasseffect.wav"))
     Player.growSound.set_volume(0.2)
-    Player.ultSound = pygame.mixer.Sound("ult.wav")
+    Player.ultSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "ult.wav"))
     Player.ultSound.set_volume(0.1)
-    Player.bzzzSound = pygame.mixer.Sound("bzzzEffect.wav")
+    Player.bzzzSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "bzzzEffect.wav"))
     Player.bzzzSound.set_volume(0.1)
     """
     pygame.mixer.music.load("music.wav") #must be wav 16bit and stuff?
