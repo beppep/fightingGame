@@ -77,13 +77,15 @@ class Projectile():
         if isinstance(self.owner, Green):
             self.xv = (self.facingRight-0.5) * (10+10*self.op)
             self.box = [32-11, 18, 32-6, 32-9, 20+40*op]
-            self.x-=16
+            self.x-=self.xv*(4-2*op)
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
-            self.box = [32-7, 16, 32-3, 19, 7+0*self.op, 7]
+            self.box = [32-8, 16, 32-4, 19, 7+0*self.op, 7]
+            self.x-=self.xv*3
         if isinstance(self.owner, Ninja):
             self.xv = (self.facingRight-0.5) * -20
-            self.box = [2, 14, 8, 17, 5,0,0]
+            self.box = [3, 14, 7, 17, 5,0,0]
+            self.x-=self.xv*4
         if isinstance(self.owner, Monster):
             self.xv = (self.facingRight-0.5) * 8
             self.yv = -1
@@ -1146,7 +1148,7 @@ class Ninja(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Ninja, self).__init__(x, y, facingRight, controls, joystick)
-        self.box = [12, 15, 20, 28]
+        self.box = [13, 14, 19, 28]
         self.image = self.idleImage
         self.init2()
         self.xspeed=3
@@ -1156,15 +1158,15 @@ class Ninja(Player):
         [15, self.punchImage, [17, 19, 23, 23, 5,-10]],
         [18, self.punchImage],
         [22, self.prePunchImage],
-        [32, self.punchImage, [17, 19, 23, 23, 12,35]],
+        [32, self.punchImage, [17, 19, 23, 23, 12]],
         [40, self.prePunchImage],
         ]
 
         self.second = [
         [20, self.prePunchImage],
-        [25, self.punchImage, [17, 19, 23, 23, 15,-18]],
+        [25, self.punchImage, [17, 19, 23, 23, 15,-18, 35]],
         [27, self.punchImage],
-        [32, self.prePunchImage],
+        [42, self.prePunchImage],
         ]
 
         self.hair = [
@@ -1176,14 +1178,14 @@ class Ninja(Player):
 
         self.ultimate = [
         [5, self.idleImage],
-        [10, self.footImage,[19, 23, 23, 28, 10,-35,15]],
+        [10, self.footImage,[19, 23, 23, 28, 10,-35,5]],
         [20, self.armImage, [19, 17, 24, 20, 3, -30,10]],
-        [24, self.rise1Image, [19, 17, 24, 20, 3, -28,3]],
-        [28, self.rise2Image, [19, 15, 24, 18, 2, -22,3]],
-        [32, self.rise3Image, [19, 13, 24, 16, 1, -15,3]],
-        [36, self.rise4Image, [19, 11, 24, 14, 1, 0,3]],
-        [40, self.rise3Image, [19, 13, 24, 16, 1, 0,3]],
-        [44, self.rise2Image, [19, 15, 24, 18, 1, 0,3]],
+        [24, self.rise1Image, [19, 17, 24, 20, 3, -28,4]],
+        [28, self.rise2Image, [19, 15, 24, 18, 2, -22,4]],
+        [32, self.rise3Image, [19, 13, 24, 16, 1, -15,4]],
+        [36, self.rise4Image, [19, 11, 24, 14, 1, 0,4]],
+        [40, self.rise3Image, [19, 13, 24, 16, 1, 0,4]],
+        [44, self.rise2Image, [19, 15, 24, 18, 1, 0,4]],
         [48, self.rise1Image, [19, 17, 24, 20, 17, 70,20]],
         [60, self.idleImage]
         ]
@@ -1563,11 +1565,11 @@ while State.jump_out == False:
 
         # HERE * * * * * * * * *
         choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        #choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
         #choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
-        for i in range(0):
+        for i in range(1):
             #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
