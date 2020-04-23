@@ -33,9 +33,9 @@ class Platform():
     
     def generate():
         Platform.platformLayouts = [
-        [Platform([600, 340, 650, 360]), Platform([96, 450, 200, 504])],
-        [Platform([96, 450, 400, 504]), Platform([96, 400, 200, 450])],
-        [],
+        [Platform([350, 340, 650, 360])],
+        #[Platform([96, 450, 400, 504]), Platform([96, 400, 200, 450])],
+        [Platform([400,450,600,504])],
         [],
         [],
         [],
@@ -77,6 +77,7 @@ class Projectile():
         if isinstance(self.owner, Green):
             self.xv = (self.facingRight-0.5) * (10+10*self.op)
             self.box = [32-11, 18, 32-6, 32-9, 20+40*op]
+            self.x-=16
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
             self.box = [32-7, 16, 32-3, 19, 7+0*self.op, 7]
@@ -86,8 +87,8 @@ class Projectile():
         if isinstance(self.owner, Monster):
             self.xv = (self.facingRight-0.5) * 8
             self.yv = -1
-            self.x+=self.xv
             self.box = [32-11, 19, 32-7, 22, 11, -44, 0]
+        self.xv+=self.owner.xv
     
     def keys(self, pressed):
         nevercalled
@@ -120,21 +121,27 @@ class Projectile():
             if self in Projectile.projectiles:
                 Projectile.projectiles.remove(self)
         #death self
-        for player in Player.players+Projectile.projectiles:
-            if player.hitboxes and not player == self:
+        for player in Player.players+Projectile.projectiles+Platform.platforms:
+            if player == self:
+                continue
+            if isinstance(player, Platform):
+                otherBox = player.hurtboxes
+            elif player.hitboxes:
                 otherBox = player.hitboxes
-                if self.hurtboxes[2]>otherBox[0] and self.hurtboxes[0]<otherBox[2]:
-                    if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
-                        if self in Projectile.projectiles:
-                            Projectile.projectiles.remove(self)
-                        if isinstance(player, Player):
-                            if (player.state==3 and type(player) in [Golem, Lizard]) or (player.state in [1,2] and type(player) in [Frog, Monster]):
-                                player.hp=min(player.hp+30, player.maxhp)
-                                Player.lickSound.play()
-                                Player.growSound.play()
-                        else: #is proj
-                            if player in Projectile.projectiles:
-                                Projectile.projectiles.remove(player)
+            else:
+                continue
+            if self.hurtboxes[2]>otherBox[0] and self.hurtboxes[0]<otherBox[2]:
+                if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
+                    if self in Projectile.projectiles:
+                        Projectile.projectiles.remove(self)
+                    if isinstance(player, Player):
+                        if (player.state==3 and type(player) in [Golem, Lizard]) or (player.state in [1,2] and type(player) in [Frog, Monster]):
+                            player.hp=min(player.hp+30, player.maxhp)
+                            Player.lickSound.play()
+                            Player.growSound.play()
+                    else: #is proj
+                        if player in Projectile.projectiles:
+                            Projectile.projectiles.remove(player)
 
 class Player():
     SCALE=8
@@ -322,6 +329,8 @@ class Player():
         self.x+=self.xv
         self.hurtboxes = self.generateBox(self.box)
         self.hurtboxes[3]+=self.flyingHeight
+        self.hurtboxes[0]+=8
+        self.hurtboxes[2]-=8
 
         for player in Player.players+Platform.platforms:
             otherbox=player.hurtboxes[:]
@@ -350,6 +359,8 @@ class Player():
         self.y+=self.yv
         self.hurtboxes = self.generateBox(self.box)
         self.hurtboxes[3]+=self.flyingHeight
+        self.hurtboxes[0]+=8
+        self.hurtboxes[2]-=8
 
         self.onGround=False
         for player in Player.players+Platform.platforms:
