@@ -77,7 +77,7 @@ class Projectile():
         if isinstance(self.owner, Green):
             self.xv = (self.facingRight-0.5) * (10+10*self.op)
             self.box = [32-11, 18, 32-6, 32-9, 20+40*op]
-            self.x-=self.xv*(4-2*op)
+            self.x-=self.xv*2
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
             self.box = [32-8, 16, 32-4, 19, 7+0*self.op, 7]
@@ -479,6 +479,7 @@ class Puncher(Player):
         super(Puncher, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-17, 16+3, 32-4]
         self.image = Puncher.idleImage
+        self.xspeed = 2.5
         self.init2()
 
         self.first = [
@@ -547,7 +548,8 @@ class Big(Player):
         super(Big, self).__init__(x, y, facingRight, controls,joystick)
         self.box = [16-4, 12, 16+4, 32-4]
         self.image = Big.idleImage
-        #self.xspeed=1
+        self.xspeed=1.8
+        self.hp=300
         self.init2()
 
         self.first = [
@@ -562,13 +564,13 @@ class Big(Player):
 
         self.second = [
         [2, self.prePunchImage, [10, 17, 11, 32-9, 20]],
-        [30, self.prePunchImage, None],
+        [30, self.prePunchImage],
         [130, self.prePunchImage, None, True],
-        [140, self.midPunchImage, None],
+        [140, self.midPunchImage],
         [150, self.punchImage, [16, 16, 32-6, 32-8, 80, 100, 80]],
-        [170, self.punchImage, None],
-        [180, self.midPunchImage, None],
-        [190, self.prePunchImage, None],
+        [170, self.punchImage],
+        [180, self.midPunchImage],
+        [190, self.prePunchImage],
         ]
 
         self.elbow = [
@@ -582,7 +584,7 @@ class Big(Player):
         [25, self.skullImage, [15, 10, 23, 12, 50]],
         [35, self.skullImage, None],
         ]
-    ""
+    
     def attack3(self, pressed):
         #self.executeAttack(self.elbow, not self.pressed["3"])
         
@@ -659,6 +661,7 @@ class Green(Player):
         self.box = [16-3, 32-14, 16+3, 32-4]
         self.maxhp = 200
         self.image = Green.idleImage
+        self.xspeed = 2.5
         self.init2()
 
         self.first = [
@@ -1023,6 +1026,7 @@ class Lizard(Player):
         super(Lizard, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-17, 16+3, 32-4]
         self.image = Lizard.idleImage
+        self.xspeed = 2.5
         self.CHARGE = 30
         self.init2()
 
@@ -1267,12 +1271,9 @@ class Can(Player):
             Player.growSound.play()
         elif self.attackFrame<100:
             self.image = self.waterImage
-            self.attackBox = [13,31,16,32, 2, 0, 0]
+            self.attackBox = [13,31,16,32, 1, 0, 0]
             self.yv-=1
             self.yv=self.yv*0.95
-            self.hp-=0.1
-            if self.hp<=0:
-                Player.players.remove(self)
             self.facingRight = not self.facingRight
             if not (self.pressed["3"] or self.pressed["4"]):
                 self.attackFrame=99
@@ -1310,6 +1311,7 @@ class Frog(Player):
         super(Frog, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-16, 16+3, 32-6]
         self.image = Frog.idleImage
+        self.xspeed = 2.5
         self.CHARGE=30
         self.init2()
 
