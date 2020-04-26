@@ -262,14 +262,24 @@ class Player():
                 target = Player.players[0]
             else:
                 target = random.choice(Player.players)
-            if random.randint(0,10)==0 and target!=self:
-                self.pressed["a"] = target.x < self.x
-            #elif random.randint(0,50)==0 and target!=self:
-             #   self.pressed["a"] = target.x > self.x
-            #self.pressed["a"] = self.pressed["a"] ^ (random.randint(0,20)==0)
-            self.pressed["d"] = not self.pressed["a"]
-            for i in ["w","1","2","3","4","5"]:
-                self.pressed[i] = (random.randint(0,40)==0)# ^ self.pressed[i]
+            if random.random()<0.1:
+                self.pressed["d"] = random.randint(0,1)
+            if random.randint(0,20)==0 and target!=self:
+                self.pressed["w"] = target.y < self.y
+
+            attacking=False
+            for i in ["1","2","3","4","5"]:
+                self.pressed[i] = (random.randint(0,40)==0) ^ (self.state!=State.idle)
+                if self.pressed[i]:
+                    self.pressed["d"] = target.x > self.x
+                    if isinstance(self, Ninja) and (self.pressed["3"] or self.pressed["4"]):
+                        self.pressed["d"] = target.x < self.x
+                    if isinstance(self, Lizard) and self.pressed["4"]:
+                        self.pressed["d"] = target.x < self.x
+                        self.pressed["w"] = True
+
+            self.pressed["a"] = not self.pressed["d"]
+
         elif self.joystick:
             x = self.joystick.get_axis(0)
             triggers = self.joystick.get_axis(2) #lt - rt but 0 = -3.01
@@ -701,7 +711,7 @@ class Green(Player):
         if self.attackFrame < 90:
             self.image = self.magicImage
             self.attackBox = None
-            if self.attackFrame%10==0:
+            if self.attackFrame%15==0:
                 self.facingRight = not self.facingRight
         else:
             self.hp = min(self.maxhp, self.hp+30)
@@ -737,24 +747,37 @@ class Green(Player):
     projbImage = Player.load("green", "projb.png")
     magicImage = Player.load("green", "magic.png")
 class Tree(Player):
-            
+
+    def passive(self):
+        if random.randint(0,50)<1: #dont know if this is needed
+            codes = []
+            for player in Player.players:
+                if isinstance(player, Tree):
+                    if not player.code in codes:
+                        codes.append(player.code)
+                else:
+                    return #there exists another player
+            if len(codes)==1:
+                Player.players.remove(self)
+
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Tree, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-15, 16+3, 32-4]
         self.image = Tree.idleImage
         self.CHARGE = 20
+        self.code = random.random()
         self.init2()
 
         self.first = [
         [8, self.preKickImage],
-        [16, self.kickImage, [32-16, 32-8-4, 32-9, 32-7, 18]],
+        [16, self.kickImage, [16, 20, 32-9, 32-7, 18]],
         [20, self.kickImage],
         [26, self.preKickImage],
         ]
 
         self.second = [
         [15, self.preKickImage],
-        [28, self.kickImage, [32-16, 32-8-4, 32-9, 32-7, 44]],
+        [28, self.kickImage, [16, 20, 32-9, 32-7, 44]],
         [40, self.kickImage],
         [50, self.preKickImage],
         ]
@@ -813,18 +836,24 @@ class Tree(Player):
         if self.attackFrame == 1:
             Player.growSound.play()
             Player.ultSound.play()
+
             new = Tree(self.x, self.y, self.facingRight, self.controls, self.joystick)
+            new.code = self.code
+
             new.hp = self.hp
             new.random = self.random
-            self.CHARGE = 200
-            self.hp=0
-            #move forward
-            self.image = self.growImage
-            self.invincible=True
-            self.x += 400*(self.facingRight-0.5)
-            self.y = 700 #far down
+            new.state = 5
+            new.attackFrame = 2
+            new.CHARGE = 200
+            new.hp=0
+            new.x += 400*(self.facingRight-0.5)
+            new.y = 700 #far down
+
+            self.state = State.idle
+
         elif self.attackFrame < 20:
-            pass
+            self.invincible=True
+            self.image = self.growImage
         elif self.attackFrame < 50:
             self.invincible=False
             self.image = self.preGrowImage
@@ -1279,6 +1308,8 @@ class Can(Player):
                 self.attackFrame=99
         elif self.attackFrame<109:
             self.image = self.idleImage
+            self.facingRight = not self.facingRight
+            self.yv=self.yv*0.95
             self.attackBox = None
         else:
             self.state = State.idle
@@ -1555,16 +1586,16 @@ while State.jump_out == False:
         if event.type == pygame.QUIT:
             State.jump_out = True
     if len(Player.players)<2:
-        time.sleep(1)
+        time.sleep(0.5)
         choices = restart()
 
         # HERE * * * * * * * * *
         choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        #choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
         #choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
-        for i in range(1):
+        for i in range(0):
             #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
@@ -1573,7 +1604,7 @@ while State.jump_out == False:
         currentBackground = random.choice(backgrounds)
         Platform.restart()
         pygame.display.update()
-        time.sleep(1)
+        time.sleep(0.5)
     
 
     pressed = pygame.key.get_pressed()
