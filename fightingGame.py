@@ -4,7 +4,7 @@ import random
 import os
 clock = pygame.time.Clock()
 filepath=""
-#"C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
+#"C:/Users/brovar02/Document    s/fightingGame/fightingGame-master/"
 
 SOUND_PATH = os.path.join(filepath, "sounds")
 
@@ -61,7 +61,7 @@ class Platform():
 
     def draw(self):
         pygame.draw.rect(gameDisplay, (127, 127, 127), \
-        (self.hurtboxes[0],self.hurtboxes[1],self.hurtboxes[2]-self.hurtboxes[0],self.hurtboxes[3]-self.hurtboxes[1]), 0)
+        (self.hurtboxes[0]+shakeX,self.hurtboxes[1]+shakeY,self.hurtboxes[2]-self.hurtboxes[0],self.hurtboxes[3]-self.hurtboxes[1]), 0)
 
 class Projectile():
     projectiles = []
@@ -98,11 +98,11 @@ class Projectile():
 
     def draw(self):
         image = self.owner.projbImage[self.facingRight]
-        gameDisplay.blit(image, (self.x+random.randint(-8,8)*self.op, self.y+random.randint(-8,8)*self.op))
+        gameDisplay.blit(image, (self.x+random.randint(-8,8)*self.op+shakeX, self.y+random.randint(-8,8)*self.op+shakeY))
         if random.random()<.1:
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
-                (self.hitboxes[0],self.hitboxes[1],self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
+                (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
 
     def physics(self):
         self.x += self.xv
@@ -440,6 +440,11 @@ class Player():
         self.stun = max(self.stun, abs(stun))
         self.yv=-abs(knockback*0.2)
         self.xv=knockback*(self.facingRight-0.5)*-0.2
+        #effects
+        Player.shake=damage//2
+        if damage>10+random.random()*10:
+            theImage = Player.hurtImage[self.facingRight]
+            gameDisplay.blit(theImage, (self.x+self.facingRight*20, self.y))
         
 
     def generateBox(self, data):
@@ -468,11 +473,11 @@ class Player():
         
         if not self.invisible: #character
             image = self.image[self.facingRight]
-            gameDisplay.blit(image, (self.x, self.y))
+            gameDisplay.blit(image, (self.x+shakeX, self.y+shakeY))
         if random.random()<.1: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
-                (self.hitboxes[0],self.hitboxes[1],self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
+                (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
         factor = 0.3
         leftEdge=(self.hurtboxes[0]+self.hurtboxes[2]-self.maxhp*factor)/2
         if self.ultCharge>self.CHARGE and not self.invisible:
@@ -482,6 +487,13 @@ class Player():
         if self.hp>0 and not self.invisible: #health bars
             pygame.draw.rect(gameDisplay, (255, 0, 0), (leftEdge,self.hurtboxes[1]-32+1,self.maxhp*factor,6), 0)
             pygame.draw.rect(gameDisplay, (0, 255, 0), (leftEdge,self.hurtboxes[1]-32,self.hp*factor,8), 0)
+
+    
+    hurtImage = pygame.image.load(os.path.join(filepath, "textures", "effect.png"))
+    hurtImage = pygame.transform.scale(hurtImage, (8*32, 8*32))
+    hurtImage = (pygame.transform.flip(hurtImage, True, False), hurtImage)
+
+    shake = 0
 
 class Puncher(Player):
 
@@ -1591,11 +1603,11 @@ while State.jump_out == False:
 
         # HERE * * * * * * * * *
         choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        #choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
         #choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
-        for i in range(0):
+        for i in range(1):
             #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
@@ -1606,6 +1618,16 @@ while State.jump_out == False:
         pygame.display.update()
         time.sleep(0.5)
     
+    #shake
+    if Player.shake:
+        Player.shake-=1
+        shakeX = (random.random()-0.5)*Player.shake
+        shakeY = (random.random()-0.5)*Player.shake
+    else:
+        shakeX = 0
+        shakeY = 0
+    #background
+    gameDisplay.blit(currentBackground, (0+shakeX,0+shakeY))
 
     pressed = pygame.key.get_pressed()
     for player in Player.players:
@@ -1613,8 +1635,8 @@ while State.jump_out == False:
         player.action()
     for player in Player.players+Projectile.projectiles:
         player.physics()
+
     #draw
-    gameDisplay.blit(currentBackground, (0,0))
     for player in Player.players+Projectile.projectiles+Platform.platforms:
         player.draw()
         
