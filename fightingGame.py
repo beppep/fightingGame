@@ -84,8 +84,9 @@ class Projectile():
             self.x-=self.xv*3
         if isinstance(self.owner, Ninja):
             self.xv = (self.facingRight-0.5) * -20
-            self.box = [3, 14, 7, 17, 5,0,0]
+            self.box = [3, 14, 7, 17, 5,0,10]
             self.x-=self.xv*4
+            self.yv = .5
         if isinstance(self.owner, Monster):
             self.xv = (self.facingRight-0.5) * 8
             self.yv = -1
@@ -1232,17 +1233,17 @@ class Ninja(Player):
         #self.executeAttack(self.hair, not self.pressed["3"])
 
         if self.attackFrame < 5:
-            self.image = self.idleImage
+            self.image = self.preHairImage
             self.attackBox = None
             self.xv=self.xv-(self.facingRight*2-1)*2        
         elif self.attackFrame < 8: 
             self.image = self.hairImage
-            self.attackBox = [5, 16, 9, 24, 10,15,8]
-        elif self.attackFrame < 14:
+            self.attackBox = [5, 16, 9, 24, 10,15]
+        elif self.attackFrame < 19:
             self.image = self.hairImage
             self.attackBox = None
         elif self.attackFrame < 29:
-            self.image = self.idleImage
+            self.image = self.preHairImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -1275,6 +1276,7 @@ class Ninja(Player):
     fireImage = Player.load("ninja", "fire.png")
     prePunchImage = Player.load("ninja", "prepunch.png")
     punchImage = Player.load("ninja", "punch.png")
+    preHairImage = Player.load("ninja", "prehair.png")
     hairImage = Player.load("ninja", "hair.png")
     projbImage = Player.load("ninja", "proj.png")
     
