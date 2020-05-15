@@ -1600,7 +1600,7 @@ class Penguin(Player):
         self.wizardFirst = [
         [10, self.preMagicImage],
         [17, self.midMagicImage],
-        [72, self.magicImage, [24,17,24+6,17+6, 5,10], True],
+        [72, self.magicImage, [20,17,24+6,17+6, 5,10], True],
         [78, self.magicImage],
         [85, self.midMagicImage],
         [90,self.preMagicImage],
