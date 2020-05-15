@@ -93,14 +93,16 @@ class Projectile():
             self.yv = -1
             self.box = [32-11, 19, 32-7, 22, 11, -44, 0]
         if isinstance(self.owner, Penguin):
+            self.y-=10
             if self.op:
                 self.xv = (self.facingRight-0.5) * 16
                 self.box = [19, 20, 19+3, 20+3, 15]
                 self.image = self.owner.projaImage
             else:
                 self.xv = (self.facingRight-0.5) * 8
-                self.x+=self.owner.xv
-                self.box = [18+3,18,18+6,18+5, 35]
+                #self.x+=self.owner.xv
+                self.yv = 0.2
+                self.box = [18+1,18,18+6,18+5, 29]
         self.xv+=self.owner.xv
 
     def keys(self, pressed):
@@ -1563,12 +1565,14 @@ class Penguin(Player):
             self.first = self.wizardFirst
             self.second = self.wizardSecond
             self.attack3 = self.throw
+            self.xspeed = 1.8
         else:
             self.idleImage = self.ninjaImage
             self.stunnedImage = self.stunnedNinjaImage
             self.first = self.ninjaFirst
             self.second = self.ninjaSecond
             self.attack3 = self.shuriken
+            self.xspeed = 2.5
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Penguin, self).__init__(x, y, facingRight, controls, joystick)
@@ -1589,17 +1593,17 @@ class Penguin(Player):
         [12, self.prePunchImage],
         [21, self.punchImage, [18, 19, 24, 23, 37]],
         [30, self.punchImage],
-        [36, self.idleImage],
+        [36, self.ninjaImage],
         [46, self.prePunchImage],
         ]
 
         self.wizardFirst = [
-        [5, self.preMagicImage],
         [10, self.preMagicImage],
-        [72, self.magicImage, [24,17,24+7,17+7, 5,10], True],
-        [75, self.magicImage],
-        [80, self.preMagicImage],
-        [85,self.preMagicImage],
+        [17, self.midMagicImage],
+        [72, self.magicImage, [24,17,24+6,17+6, 5,10], True],
+        [78, self.magicImage],
+        [85, self.midMagicImage],
+        [90,self.preMagicImage],
         ]
 
         self.wizardSecond = self.wizardFirst
@@ -1615,7 +1619,7 @@ class Penguin(Player):
         elif self.attackFrame == 23:
             self.image = self.punchImage
             Projectile.projectiles.append(Projectile(self, op=True))
-        elif self.attackFrame < 36:
+        elif self.attackFrame < 46:
             self.image = self.idleImage
         else:
             self.state = State.idle
@@ -1623,18 +1627,16 @@ class Penguin(Player):
             self.attackBox = None
 
     def throw(self,pressed):
-        if self.attackFrame < 15:
+        if self.attackFrame < 18:
             self.image = self.preHatImage
             self.attackBox = None
-        elif self.attackFrame < 23:
-            self.image = self.midHatImage
         elif self.attackFrame < 28: 
             self.image = self.midHatImage
         elif self.attackFrame == 28:
             self.wizard = not self.wizard
-            self.image = self.punchImage
+            self.image = self.midHatImage
             Projectile.projectiles.append(Projectile(self))
-        elif self.attackFrame < 36:
+        elif self.attackFrame < 109:
             self.image = self.punchImage
         else:
             self.state = State.idle
@@ -1669,7 +1671,10 @@ class Penguin(Player):
 
     idleImage = wizardImage #selesctscreen
 
-allClasses = [Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Can, Frog, Monster, Penguin]
+allClasses = [
+Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Monster, Penguin,
+]
 
 def restart():
     Player.players = []
@@ -1682,10 +1687,10 @@ def restart():
                 State.jump_out = True
 
         pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_LEFT]:
+        if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
             num-=1
             time.sleep(0.1)
-        if pressed[pygame.K_RIGHT]:
+        if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
             num+=1
             time.sleep(0.1)
         if pressed[pygame.K_r]:
@@ -1694,7 +1699,7 @@ def restart():
             if len(choices)==State.playerCount:
                 return choices
             time.sleep(0.5)
-        if pressed[pygame.K_SPACE]:
+        if pressed[pygame.K_SPACE] or pressed[pygame.K_RETURN]:
             choices.append(allClasses[num%len(allClasses)])
             num=0
             if len(choices)==State.playerCount:
