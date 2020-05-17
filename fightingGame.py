@@ -1597,14 +1597,14 @@ class Penguin(Player):
             self.first = self.wizardFirst
             self.second = self.wizardSecond
             self.attack3 = self.throw
-            self.xspeed = 1.5
+            self.xspeed = 1.8
         else:
             self.idleImage = self.ninjaImage
             self.stunnedImage = self.stunnedNinjaImage
             self.first = self.ninjaFirst
             self.second = self.ninjaSecond
             self.attack3 = self.shuriken
-            self.xspeed = 3
+            self.xspeed = 2.5
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Penguin, self).__init__(x, y, facingRight, controls, joystick)
