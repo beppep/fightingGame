@@ -106,11 +106,11 @@ class Projectile():
             self.x-=self.xv*2
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
-            self.box = [32-8, 16, 32-4, 19, 7+0*self.op, 7]
+            self.box = [32-8, 16, 32-4, 19, 9+0*self.op, 7]
             self.x-=self.xv*3
         if isinstance(self.owner, Ninja):
             self.xv = (self.facingRight-0.5) * -20
-            self.box = [3, 14, 7, 17, 5,0,10]
+            self.box = [3, 14, 7, 17, 7,0,10]
             self.x-=self.xv*4
             self.yv = .5
         if isinstance(self.owner, Monster):
@@ -121,13 +121,13 @@ class Projectile():
             self.y-=10
             if self.op:
                 self.xv = (self.facingRight-0.5) * 16
-                self.box = [19, 20, 19+3, 20+3, 15]
+                self.box = [19, 20, 19+3, 20+3, 9]
                 self.image = self.owner.projaImage
             else:
                 self.xv = (self.facingRight-0.5) * 8
                 #self.x+=self.owner.xv
                 self.yv = 0.2
-                self.box = [18+1,18,18+6,18+5, 29]
+                self.box = [18+1,18,18+6,18+5, 23]
         self.xv+=self.owner.xv
 
     def keys(self, pressed):
@@ -1210,10 +1210,10 @@ class Golem(Player):
         ]
 
         self.grass = [
-        [19, self.preGrassImage],
-        [39, self.grassImage, [21, 19, 32, 24, 5, 5]],
-        [44, self.grassImage, [21, 19, 32, 24, 15, 25]],
-        [60, self.preGrassImage],
+        [23, self.preGrassImage],
+        [43, self.grassImage, [21, 19, 32, 24, 5, 5]],
+        [48, self.grassImage, [21, 19, 32, 24, 15, 25]],
+        [64, self.preGrassImage],
         ]
 
         self.ultimate = [
@@ -1267,22 +1267,22 @@ class Ninja(Player):
 
         self.second = [
         [20, self.prePunchImage],
-        [25, self.punchImage, [17, 19, 23, 23, 15,-18, 35]],
+        [25, self.punchImage, [17, 19, 23, 23, 18,-18, 35]],
         [27, self.punchImage],
         [42, self.prePunchImage],
         ]
 
         self.ultimate = [
         [5, self.idleImage],
-        [10, self.footImage,[19, 23, 23, 28, 10,-35,5]],
-        [20, self.armImage, [19, 17, 24, 20, 3, -30,10]],
-        [24, self.rise1Image, [19, 17, 24, 20, 3, -28,4]],
+        [10, self.footImage,[19, 23, 23, 28, 5,-35,5]],
+        [20, self.armImage, [19, 17, 24, 20, 1, -30,10]],
+        [24, self.rise1Image, [19, 17, 24, 20, 1, -28,4]],
         [28, self.rise2Image, [19, 15, 24, 18, 2, -22,4]],
-        [32, self.rise3Image, [19, 13, 24, 16, 1, -15,4]],
-        [36, self.rise4Image, [19, 11, 24, 14, 1, 0,4]],
-        [40, self.rise3Image, [19, 13, 24, 16, 1, 0,4]],
-        [44, self.rise2Image, [19, 15, 24, 18, 1, 0,4]],
-        [48, self.rise1Image, [19, 17, 24, 20, 17, 70,20]],
+        [32, self.rise3Image, [19, 13, 24, 16, 5, -15,4]],
+        [36, self.rise4Image, [19, 11, 24, 14, 10, 0,4]],
+        [40, self.rise3Image, [19, 13, 24, 16, 5, 0,4]],
+        [44, self.rise2Image, [19, 15, 24, 18, 2, 0,4]],
+        [48, self.rise1Image, [19, 17, 24, 20, 10, 70]],
         [60, self.idleImage]
         ]
 
@@ -1597,14 +1597,14 @@ class Penguin(Player):
             self.first = self.wizardFirst
             self.second = self.wizardSecond
             self.attack3 = self.throw
-            self.xspeed = 1.8
+            self.xspeed = 1.5
         else:
             self.idleImage = self.ninjaImage
             self.stunnedImage = self.stunnedNinjaImage
             self.first = self.ninjaFirst
             self.second = self.ninjaSecond
             self.attack3 = self.shuriken
-            self.xspeed = 2.5
+            self.xspeed = 3
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Penguin, self).__init__(x, y, facingRight, controls, joystick)
@@ -1612,7 +1612,6 @@ class Penguin(Player):
         self.image = self.ninjaImage
         self.xspeed = 2.5
         self.wizard = False
-        self.CHARGE = 10
         self.init2()
 
         self.ninjaFirst = [
@@ -1687,11 +1686,11 @@ class Penguin(Player):
             self.attackBox = None
 
     def attack4(self, pressed):
-        if self.attackFrame < 6:
+        if self.attackFrame < 9:
             self.image = self.preHatImage
-        elif self.attackFrame == 6:
+        elif self.attackFrame == 9:
             self.wizard = not self.wizard
-        elif self.attackFrame < 15:
+        elif self.attackFrame < 16:
             self.image = self.idleImage
         else:
             self.state = State.idle
@@ -1709,7 +1708,7 @@ class Penguin(Player):
             self.xv=(self.facingRight-0.5)*8
             self.yv-=1
             self.yv*=0.95
-            self.attackBox = [9,8,9+13,8+21, 6,20,6]
+            self.attackBox = [9,8,9+13,8+21, 5,20,6]
         elif self.attackFrame < 106:
             self.invincible=False
             self.attackBox = None
