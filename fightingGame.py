@@ -4,26 +4,51 @@ import random
 import os
 clock = pygame.time.Clock()
 filepath=""
-#"C:/Users/brovar02/Document    s/fightingGame/fightingGame-master/"
+#"C:/Users/brovar02/Documents/fightingGame/fightingGame-master/"
 
 SOUND_PATH = os.path.join(filepath, "sounds")
 
 def initSound():
+    pygame.font.init() # you have to call this at the start, 
+                           # if you want to use this module.
     pygame.mixer.init(buffer=32)
     Player.hitSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "soundeffect2.wav"))
     Player.lickSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "lickeffect.wav"))
     Player.lickSound.set_volume(0.2)
     Player.growSound = pygame.mixer.Sound(os.path.join(SOUND_PATH,"grasseffect.wav"))
-    Player.growSound.set_volume(0.2)
+    Player.growSound.set_volume(0.3)
     Player.ultSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "ult.wav"))
     Player.ultSound.set_volume(0.1)
     Player.bzzzSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "bzzzEffect.wav"))
-    Player.bzzzSound.set_volume(0.1)
+    Player.bzzzSound.set_volume(0.05)
+    Player.killSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "smashbros.wav"))
+    Player.killSound.set_volume(0.5)
+    Player.gameSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "game.wav"))
+    Player.gameSound.set_volume(0.5)
     
     pygame.mixer.music.load("music.wav") #must be wav 16bit and stuff?
     pygame.mixer.music.set_volume(0.1)
     pygame.mixer.music.play(-1)
-    
+
+def endEffect():
+    pygame.draw.rect(gameDisplay, (200, 0, 100), (96,0,808,504), 0)
+    Player.hitLag=1
+    if len(Player.players)>2:
+        Player.killSound.play()
+    else:
+        Player.gameSound.play()
+
+def countPlayers():
+    players=0
+    codes = []
+    for player in Player.players:
+        if isinstance(player, Tree):
+            if not player.code in codes:
+                codes.append(player.code)
+        else:
+            players+=1
+    players+=len(codes)
+    return players
 
 class State():
     idle=0
@@ -35,7 +60,7 @@ class Platform():
         Platform.platformLayouts = [
         [Platform([350, 340, 650, 360])],
         #[Platform([96, 450, 400, 504]), Platform([96, 400, 200, 450])],
-        [Platform([400,450,600,504])],
+        #[Platform([400,450,600,504])],
         [],
         [],
         [],
@@ -340,10 +365,11 @@ class Player():
             self.state = 4
             self.attackFrame = 0
         
-        if(self.pressed["5"] and self.ultCharge>self.CHARGE and not isinstance(self,Lizard)):
-            self.state = 5
-            self.attackFrame = 0
-            self.ultCharge = 0
+        if(self.pressed["5"] and self.ultCharge>self.CHARGE):
+            if not isinstance(self,Lizard) and not (isinstance(self,Penguin) and not self.wizard):
+                self.state = 5
+                self.attackFrame = 0
+                self.ultCharge = 0
         
         if random.random()<0.1:
             self.ultCharge+=1
@@ -444,14 +470,16 @@ class Player():
         self.facingRight = player.x>self.x #not player.facingRight
 
         self.hp -= damage
+        Player.hitLag = 0.02+damage/800
         if stun:
             self.state = State.stunned
             self.attackFrame = 0
             if self.hp<=0:
-                pygame.draw.rect(gameDisplay, (200, 0, 100), (96,0,808,504), 0)
+                if not (isinstance(self,Tree) and not self.isLastTree()):
+                    endEffect()
         elif self.hp<=0:
+            endEffect()
             Player.players.remove(self)
-            pygame.draw.rect(gameDisplay, (200, 0, 100), (96,0,808,504), 0)
         self.stun = max(self.stun, abs(stun))
         self.yv=-abs(knockback*0.2)
         self.xv=knockback*(self.facingRight-0.5)*-0.2
@@ -460,7 +488,6 @@ class Player():
         if damage>10+random.random()*10:
             theImage = Player.hurtImage[self.facingRight]
             gameDisplay.blit(theImage, (self.x+self.facingRight*20, self.y))
-        Player.hitLag = 0.02+damage/800
         
 
     def generateBox(self, data):
@@ -782,15 +809,16 @@ class Tree(Player):
 
     def passive(self):
         if random.randint(0,50)<1: #dont know if this is needed
-            codes = []
-            for player in Player.players:
-                if isinstance(player, Tree):
-                    if not player.code in codes:
-                        codes.append(player.code)
-                else:
-                    return #there exists another player
-            if len(codes)==1:
+            num = countPlayers()
+            if num==1:
                 Player.players.remove(self)
+
+    def isLastTree(self):
+        for player in Player.players:
+            if player!=self and isinstance(player, Tree):
+                if player.code == self.code:
+                    return False
+        return True
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Tree, self).__init__(x, y, facingRight, controls, joystick)
@@ -817,9 +845,11 @@ class Tree(Player):
     def attack3(self, pressed):
         if self.attackFrame == 1:
             Player.growSound.play()
-        if self.attackFrame < 7:
+        elif self.attackFrame < 4:
+            self.yv+=0.5
+        elif self.attackFrame < 14:
             self.image = self.preGrowImage
-        elif self.attackFrame < 12:
+        elif self.attackFrame < 22:
             self.image = self.growImage
             self.invincible=True
         elif self.attackFrame < 100:
@@ -844,9 +874,11 @@ class Tree(Player):
     def attack4(self, pressed):
         if self.attackFrame == 1:
             Player.growSound.play()
-        if self.attackFrame < 7:
+        elif self.attackFrame < 4:
+            self.yv+=0.5
+        elif self.attackFrame < 14:
             self.image = self.preGrowImage
-        elif self.attackFrame < 12:
+        elif self.attackFrame < 22:
             self.image = self.growImage
             self.invincible=True
         elif self.attackFrame < 100:
@@ -1600,13 +1632,23 @@ class Penguin(Player):
         self.wizardFirst = [
         [10, self.preMagicImage],
         [17, self.midMagicImage],
-        [72, self.magicImage, [20,17,24+6,17+6, 5,10], True],
+        [72, self.magicImage, [23,17,24+6,17+6, 5,10], True],
         [78, self.magicImage],
         [85, self.midMagicImage],
         [90,self.preMagicImage],
         ]
-
         self.wizardSecond = self.wizardFirst
+
+    def attack1(self, pressed):
+        self.executeAttack(self.first, not self.pressed["1"])
+        if self.attackFrame==1 and self.wizard:
+            Player.bzzzSound.play()
+            Player.growSound.play()
+    def attack2(self, pressed):
+        self.executeAttack(self.second, not self.pressed["2"])
+        if self.attackFrame==1 and self.wizard:
+            Player.bzzzSound.play()
+            Player.growSound.play()
 
     def shuriken(self,pressed):
         if self.attackFrame < 10:
@@ -1650,6 +1692,33 @@ class Penguin(Player):
             self.wizard = not self.wizard
         elif self.attackFrame < 15:
             self.image = self.idleImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack5(self, pressed):
+        if self.attackFrame==1:
+            Player.ultSound.play()
+            Player.bzzzSound.play()
+            Player.growSound.play()
+        if self.attackFrame < 6:
+            self.image = self.preMagicImage
+        elif self.attackFrame < 12:
+            self.image = self.midMagicImage
+            self.xv+=(self.facingRight-0.5)*0.2
+            self.yv-=0.95
+        elif self.attackFrame < 91:
+            self.image = self.magicImage
+            self.attackBox = [23,17,24+6,17+6, 5,40,10]
+            self.yv-=0.95
+            self.xv+=(self.facingRight-0.5)*0.2
+        elif self.attackFrame < 101:
+            self.image = self.preMagicImage
+            self.attackBox = None
+        elif self.attackFrame < 111:
+            self.yv-=1
+            self.image = self.midMagicImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -1714,6 +1783,11 @@ def restart():
         for i in [-2,-1,0,1,2]:
             gameDisplay.blit(allClasses[(num-i)%len(allClasses)].idleImage[1], (400-100*i, 300))
         
+        myfont = pygame.font.SysFont('Arial', 30)
+        name = allClasses[num%len(allClasses)].__name__
+        textsurface = myfont.render(name, False, (0, 0, 0))
+        gameDisplay.blit(textsurface,(540-len(name)*10,540 ))
+
         pygame.display.update()
         clock.tick(100)
     
@@ -1752,14 +1826,14 @@ while State.jump_out == False:
         choices = restart()
 
         # HERE * * * * * * * * *
-        choices[0](200, 100, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        choices[1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-        #choices[0](400, 100, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
+        choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+        #choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        #choices[0](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
-        for i in range(0):
-            #random.choice(allClasses)(600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-            choices[-i+1](600, 100, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        for i in range(1):
+            #random.choice(allClasses)(600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            choices[-i+1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
         # HERE * * * * * * * * *
 
