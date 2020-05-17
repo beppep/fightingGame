@@ -1612,6 +1612,7 @@ class Penguin(Player):
         self.image = self.ninjaImage
         self.xspeed = 2.5
         self.wizard = False
+        self.CHARGE = 10
         self.init2()
 
         self.ninjaFirst = [
@@ -1702,23 +1703,18 @@ class Penguin(Player):
             Player.ultSound.play()
             Player.bzzzSound.play()
             Player.growSound.play()
-        if self.attackFrame < 6:
-            self.image = self.preMagicImage
-        elif self.attackFrame < 12:
-            self.image = self.midMagicImage
-            self.xv+=(self.facingRight-0.5)*0.2
-            self.yv-=0.95
-        elif self.attackFrame < 91:
-            self.image = self.magicImage
-            self.attackBox = [23,17,24+6,17+6, 5,40,10]
-            self.yv-=0.95
-            self.xv+=(self.facingRight-0.5)*0.2
-        elif self.attackFrame < 101:
-            self.image = self.preMagicImage
-            self.attackBox = None
-        elif self.attackFrame < 111:
+            self.invincible=True
+        if self.attackFrame < 96:
+            self.image = random.choice([self.haloImage,self.halo2Image,self.wizardImage])
+            self.xv=(self.facingRight-0.5)*8
             self.yv-=1
-            self.image = self.midMagicImage
+            self.yv*=0.95
+            self.attackBox = [9,8,9+13,8+21, 6,20,6]
+        elif self.attackFrame < 106:
+            self.invincible=False
+            self.attackBox = None
+            self.yv-=1
+            self.image = self.wizardImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -1737,6 +1733,8 @@ class Penguin(Player):
     preMagicImage = Player.load("penguin", "premagic.png")
     midMagicImage = Player.load("penguin", "midmagic.png")
     magicImage = Player.load("penguin", "magic.png")
+    haloImage = Player.load("penguin", "halo.png")
+    halo2Image = Player.load("penguin", "halo2.png")
 
     idleImage = wizardImage #selesctscreen
 
