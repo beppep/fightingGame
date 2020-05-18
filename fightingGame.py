@@ -108,7 +108,7 @@ class Projectile():
             self.xv = (self.facingRight-0.5) * 20
             self.box = [32-8, 16, 32-4, 19, 9+0*self.op, 7]
             self.x-=self.xv*3
-        if isinstance(self.owner, Ninja):
+        if isinstance(self.owner, Alien):
             self.xv = (self.facingRight-0.5) * -20
             self.box = [3, 14, 7, 17, 7,0,10]
             self.x-=self.xv*4
@@ -309,7 +309,7 @@ class Player():
                 self.pressed[i] = (random.randint(0,40)==0) ^ (self.state!=State.idle)
                 if self.pressed[i]:
                     self.pressed["d"] = target.x > self.x
-                    if isinstance(self, Ninja) and (self.pressed["3"] or self.pressed["4"]):
+                    if isinstance(self, Alien) and (self.pressed["3"] or self.pressed["4"]):
                         self.pressed["d"] = target.x < self.x
                     if isinstance(self, Lizard) and self.pressed["4"]:
                         self.pressed["d"] = target.x < self.x
@@ -1321,21 +1321,21 @@ class Alien(Player):
             pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
         self.executeAttack(self.ultimate)
 
-    idleImage = Player.load("ninja", "idle.png")
-    stunnedImage = Player.load("ninja", "stunned.png")
-    fireImage = Player.load("ninja", "fire.png")
-    prePunchImage = Player.load("ninja", "prepunch.png")
-    punchImage = Player.load("ninja", "punch.png")
-    preHairImage = Player.load("ninja", "prehair.png")
-    hairImage = Player.load("ninja", "hair.png")
-    projbImage = Player.load("ninja", "proj.png")
+    idleImage = Player.load("alien", "idle.png")
+    stunnedImage = Player.load("alien", "stunned.png")
+    fireImage = Player.load("alien", "fire.png")
+    prePunchImage = Player.load("alien", "prepunch.png")
+    punchImage = Player.load("alien", "punch.png")
+    preHairImage = Player.load("alien", "prehair.png")
+    hairImage = Player.load("alien", "hair.png")
+    projbImage = Player.load("alien", "proj.png")
     
-    footImage = Player.load("ninja", "foot.png")
-    armImage = Player.load("ninja", "arm.png")
-    rise1Image = Player.load("ninja", "rise1.png")
-    rise2Image = Player.load("ninja", "rise2.png")
-    rise3Image = Player.load("ninja", "rise3.png")
-    rise4Image = Player.load("ninja", "rise4.png")
+    footImage = Player.load("alien", "foot.png")
+    armImage = Player.load("alien", "arm.png")
+    rise1Image = Player.load("alien", "rise1.png")
+    rise2Image = Player.load("alien", "rise2.png")
+    rise3Image = Player.load("alien", "rise3.png")
+    rise4Image = Player.load("alien", "rise4.png")
 
 class Can(Player):
 
@@ -1740,31 +1740,33 @@ def restart():
     Player.players = []
     choices = []
     num = 0
+    myfont = pygame.font.SysFont('Arial', 30)
     while State.jump_out == False:
         #pygame.event.get()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 State.jump_out = True
 
+        lag=0
         pressed = pygame.key.get_pressed()
         if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
             num-=1
-            time.sleep(0.1)
+            lag+=0.1
         if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
             num+=1
-            time.sleep(0.1)
+            lag+=0.1
         if pressed[pygame.K_r]:
             choices.append(random.choice(allClasses))
             num=0
             if len(choices)==State.playerCount:
                 return choices
-            time.sleep(0.5)
+            lag+=0.5
         if pressed[pygame.K_SPACE] or pressed[pygame.K_RETURN]:
             choices.append(allClasses[num%len(allClasses)])
             num=0
             if len(choices)==State.playerCount:
                 return choices
-            time.sleep(0.5)
+            lag+=0.5
 
         #draw
         gameDisplay.fill((100,100,100))
@@ -1774,13 +1776,13 @@ def restart():
         for i in [-2,-1,0,1,2]:
             gameDisplay.blit(allClasses[(num-i)%len(allClasses)].idleImage[1], (400-100*i, 300))
         
-        myfont = pygame.font.SysFont('Arial', 30)
         name = allClasses[num%len(allClasses)].__name__
         textsurface = myfont.render(name, False, (0, 0, 0))
         gameDisplay.blit(textsurface,(540-len(name)*10,540 ))
 
         pygame.display.update()
-        clock.tick(10)
+        clock.tick(100)
+        time.sleep(lag)
     
     pygame.quit()
     quit()
@@ -1813,16 +1815,15 @@ while State.jump_out == False:
         if event.type == pygame.QUIT:
             State.jump_out = True
     if len(Player.players)<2:
-        time.sleep(0.5)
         choices = restart()
 
         # HERE * * * * * * * * *
         choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        #choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
         #choices[0](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
-        for i in range(1):
+        for i in range(0):
             #random.choice(allClasses)(600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             choices[-i+1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
@@ -1831,7 +1832,6 @@ while State.jump_out == False:
         currentBackground = random.choice(backgrounds)
         Platform.restart()
         pygame.display.update()
-        time.sleep(0.5)
     
     #shake
     if Player.shake:
