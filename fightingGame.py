@@ -845,25 +845,20 @@ class Tree(Player):
     def attack3(self, pressed):
         if self.attackFrame == 1:
             Player.growSound.play()
-        elif self.attackFrame < 4:
-            self.yv+=0.5
-        elif self.attackFrame < 14:
+        elif self.attackFrame < 10:
             self.image = self.preGrowImage
-        elif self.attackFrame < 22:
+        elif self.attackFrame < 17:
             self.image = self.growImage
             self.invincible=True
-        elif self.attackFrame < 100:
-            self.invisible=False
-            self.x += 8*(self.facingRight-0.5)
-            self.y = -300 #far up
-            if not self.pressed["3"] or self.attackFrame == 99:
-                self.attackFrame = 99
-                Player.growSound.play()
-                self.facingRight = not self.facingRight
-                self.y = 504 #far down
-        elif self.attackFrame < 107:
+        elif self.attackFrame < 40:
+            self.invisible=True
+        elif self.attackFrame==40:
+            self.x += 250*(self.facingRight-0.5)
+            Player.growSound.play()
+            self.facingRight = not self.facingRight
+        elif self.attackFrame < 47:
             self.invisible = False
-        elif self.attackFrame < 115:
+        elif self.attackFrame < 55:
             self.invincible=False
             self.image = self.preGrowImage
         else:
@@ -874,21 +869,18 @@ class Tree(Player):
     def attack4(self, pressed):
         if self.attackFrame == 1:
             Player.growSound.play()
-        elif self.attackFrame < 4:
-            self.yv+=0.5
-        elif self.attackFrame < 14:
+        elif self.attackFrame < 10:
             self.image = self.preGrowImage
-        elif self.attackFrame < 22:
+        elif self.attackFrame < 17:
             self.image = self.growImage
             self.invincible=True
-        elif self.attackFrame < 100:
+        elif self.attackFrame < 40:
             self.invisible=True
-            if not self.pressed["4"] or self.attackFrame == 99:
-                self.attackFrame = 99
-                Player.growSound.play()
-        elif self.attackFrame < 107:
+        elif self.attackFrame==40:
+            Player.growSound.play()
+        elif self.attackFrame < 47:
             self.invisible = False
-        elif self.attackFrame < 115:
+        elif self.attackFrame < 55:
             self.invincible=False
             self.image = self.preGrowImage
         else:
@@ -957,7 +949,7 @@ class Bird(Player):
         self.box = [16-3, 32-18, 16+3, 32-10]
         self.flyingHeight=4*Player.SCALE
         self.image = Bird.idleImage
-        self.hp = 200
+        self.hp = 180
         self.init2()
 
         self.first = [
@@ -1037,15 +1029,15 @@ class Robot(Player):
 
         self.first = [
         [30, self.stunnedImage,None],
-        [38, self.fireImage, [20, 32-17, 24, 32-12, 50, 58]],
+        [38, self.fireImage, [20, 32-17, 24, 32-12, 48, 58]],
         [45, self.fireImage, None],
         [60, self.stunnedImage, None],
         ]
 
         self.second = [
         [15, self.prePunchImage,None],
-        [30, self.punchImage, [24, 32-17, 27, 32-12, 6, 12]],
-        [80, self.punchImage, [24, 32-17, 27, 32-12, 6, 12],True],
+        [30, self.punchImage, [24, 32-17, 27, 32-12, 8, 12]],
+        [80, self.punchImage, [24, 32-17, 27, 32-12, 8, 12],True],
         [110, self.prePunchImage,None],
         ]
 
@@ -1212,7 +1204,7 @@ class Golem(Player):
         self.grass = [
         [23, self.preGrassImage],
         [43, self.grassImage, [21, 19, 32, 24, 5, 5]],
-        [48, self.grassImage, [21, 19, 32, 24, 15, 25]],
+        [48, self.grassImage, [21, 19, 32, 24, 12, 22]],
         [64, self.preGrassImage],
         ]
 
@@ -1247,10 +1239,10 @@ class Golem(Player):
     grassImage = Player.load("golem", "grass.png")
     preLickImage = Player.load("golem", "prelick.png")
     lickImage = Player.load("golem", "lick.png")
-class Ninja(Player):
+class Alien(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
-        super(Ninja, self).__init__(x, y, facingRight, controls, joystick)
+        super(Alien, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [13, 14, 19, 28]
         self.image = self.idleImage
         self.init2()
@@ -1299,7 +1291,7 @@ class Ninja(Player):
         elif self.attackFrame < 19:
             self.image = self.hairImage
             self.attackBox = None
-        elif self.attackFrame < 29:
+        elif self.attackFrame < 25:
             self.image = self.preHairImage
         else:
             self.state = State.idle
@@ -1703,6 +1695,8 @@ class Penguin(Player):
             Player.bzzzSound.play()
             Player.growSound.play()
             self.invincible=True
+        elif self.attackFrame==10:
+            self.invincible=False
         if self.attackFrame < 96:
             self.image = random.choice([self.haloImage,self.halo2Image,self.wizardImage])
             self.xv=(self.facingRight-0.5)*8
@@ -1738,8 +1732,8 @@ class Penguin(Player):
     idleImage = wizardImage #selesctscreen
 
 allClasses = [
-Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Ninja, Monster, Penguin,
+Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Alien, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Alien, Monster, Penguin,
 ]
 
 def restart():
@@ -1786,7 +1780,7 @@ def restart():
         gameDisplay.blit(textsurface,(540-len(name)*10,540 ))
 
         pygame.display.update()
-        clock.tick(100)
+        clock.tick(10)
     
     pygame.quit()
     quit()
