@@ -535,7 +535,7 @@ class Player():
     hurtImage = pygame.image.load(os.path.join(filepath, "textures", "effect.png"))
     hurtImage = pygame.transform.scale(hurtImage, (8*32, 8*32))
     hurtImage = (pygame.transform.flip(hurtImage, True, False), hurtImage)
-
+    text = ""
     shake = 0
 
 class Puncher(Player):
@@ -609,6 +609,7 @@ class Puncher(Player):
     longPunchImage = Player.load("puncher", "longpunch.png")
     prePunchImage = Player.load("puncher", "prepunch.png")
     punchImage = Player.load("puncher", "punch.png")
+    text = "Good at punching! smaller than Big."
 class Big(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -722,6 +723,7 @@ class Big(Player):
     midPunchImage = Player.load("big", "midpunch.png")
     punchImage = Player.load("big", "punch.png")
     skullImage = Player.load("big", "skull.png")
+    text = "Big!"
 class Green(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -805,6 +807,7 @@ class Green(Player):
     projaImage = Player.load("green", "proja.png")
     projbImage = Player.load("green", "projb.png")
     magicImage = Player.load("green", "magic.png")
+    text = "Has no arms :("
 class Tree(Player):
 
     def passive(self):
@@ -925,6 +928,7 @@ class Tree(Player):
     kickImage = Player.load("tree", "kick.png")
     growImage = Player.load("tree", "grow.png")
     preGrowImage = Player.load("tree", "pregrow.png")
+    text = "lol waht"
 
 class Bird(Player):
 
@@ -1019,6 +1023,7 @@ class Bird(Player):
     preelImage = Player.load("bird", "preel.png")
     elaImage = Player.load("bird", "ela.png")
     elbImage = Player.load("bird", "elb.png")
+    text = "can fly and dodge and is op"
 class Robot(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -1170,6 +1175,7 @@ class Lizard(Player):
     punchImage = Player.load("lizard", "punch.png")
     preTailImage = Player.load("lizard", "prekick.png")
     tailImage = Player.load("lizard", "kick.png")
+    text = "Cool pro animation cancel character!"
 class Golem(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1239,6 +1245,7 @@ class Golem(Player):
     grassImage = Player.load("golem", "grass.png")
     preLickImage = Player.load("golem", "prelick.png")
     lickImage = Player.load("golem", "lick.png")
+    text = "Isn't from space."
 class Alien(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1336,6 +1343,7 @@ class Alien(Player):
     rise2Image = Player.load("alien", "rise2.png")
     rise3Image = Player.load("alien", "rise3.png")
     rise4Image = Player.load("alien", "rise4.png")
+    text = "Is from space."
 
 class Can(Player):
 
@@ -1395,6 +1403,7 @@ class Can(Player):
     prePunchImage = Player.load("can", "prepunch.png")
     punchImage = Player.load("can", "punch.png")
     waterImage = Player.load("can", "water.png")
+    text = "DANSKA BURKEN"
 class Frog(Player):
 
     def passive(self):
@@ -1514,6 +1523,7 @@ class Frog(Player):
     preLickImage = Player.load("frog", "prelick.png")
     lickImage = Player.load("frog", "lick.png")
     jumpImage = Player.load("frog", "jump.png")
+    text = "bad i didnt make this"
 class Monster(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -1580,6 +1590,7 @@ class Monster(Player):
     prePunchImage = Player.load("monster", "prepunch.png")
     punchImage = Player.load("monster", "punch.png")
     projbImage = Player.load("monster", "proj.png")
+    text = "This character is very interesting."
 class Penguin(Player):
 
     def passive(self):
@@ -1728,8 +1739,9 @@ class Penguin(Player):
     magicImage = Player.load("penguin", "magic.png")
     haloImage = Player.load("penguin", "halo.png")
     halo2Image = Player.load("penguin", "halo2.png")
+    text = "Is a wizard sometimes."
 
-    idleImage = wizardImage #selesctscreen
+    idleImage = ninjaImage #selesctscreen
 
 allClasses = [
 Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Alien, Can, Frog, Monster, Penguin,
@@ -1740,7 +1752,8 @@ def restart():
     Player.players = []
     choices = []
     num = 0
-    myfont = pygame.font.SysFont('Arial', 30)
+    myfont = pygame.font.SysFont('Times New', 100)
+    myfont2 = pygame.font.SysFont('Times New Roman', 20)
     while State.jump_out == False:
         #pygame.event.get()
         for event in pygame.event.get():
@@ -1770,15 +1783,18 @@ def restart():
 
         #draw
         gameDisplay.fill((100,100,100))
-        pygame.draw.rect(gameDisplay,(200,200,200),(400+64,0,16*8,300+28*8),0)
+        pygame.draw.rect(gameDisplay,(200,200,200),(400+64,0,16*8,200+28*8),0)
         for i in range(len(choices)):
             gameDisplay.blit(choices[i].idleImage[1], (100*i, 0))
         for i in [-2,-1,0,1,2]:
-            gameDisplay.blit(allClasses[(num-i)%len(allClasses)].idleImage[1], (400-100*i, 300))
+            gameDisplay.blit(allClasses[(num-i)%len(allClasses)].idleImage[1], (400-100*i, 200))
         
         name = allClasses[num%len(allClasses)].__name__
-        textsurface = myfont.render(name, False, (0, 0, 0))
-        gameDisplay.blit(textsurface,(540-len(name)*10,540 ))
+        text = allClasses[num%len(allClasses)].text
+        textsurface = myfont.render(name, True, (0, 0, 0))
+        textsurface2 = myfont2.render(text, True, (0, 0, 0))
+        gameDisplay.blit(textsurface,(545-len(name)*24,450))
+        gameDisplay.blit(textsurface2,(10,570))
 
         pygame.display.update()
         clock.tick(100)
