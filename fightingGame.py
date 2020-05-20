@@ -1025,6 +1025,12 @@ class Bird(Player):
     elbImage = Player.load("bird", "elb.png")
     text = "can fly and dodge and is op"
 class Robot(Player):
+    
+    def passive(self):
+        if self.attackFrame%20<10: #idle animation
+            self.image = self.idlebImage
+        else:
+            self.image = self.idleImage
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Robot, self).__init__(x, y, facingRight, controls, joystick)
@@ -1108,6 +1114,7 @@ class Robot(Player):
             self.attackBox = None
 
     idleImage = Player.load("robot", "idle.png")
+    idlebImage = Player.load("robot", "idleb.png")
     stunnedImage = Player.load("robot", "stunned.png")
     fireImage = Player.load("robot", "fire.png")
     projbImage = Player.load("robot", "proj.png")
