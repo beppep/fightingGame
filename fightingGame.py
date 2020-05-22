@@ -128,6 +128,9 @@ class Projectile():
                 #self.x+=self.owner.xv
                 self.yv = 0.2
                 self.box = [18+1,18,18+6,18+5, 23]
+        if isinstance(self.owner, Sad):
+            self.box = [16-2,15,16+3,20, 10, 10, 50]
+            self.x+=(self.owner.facingRight-0.5)*100
         self.xv+=self.owner.xv
 
     def keys(self, pressed):
@@ -929,6 +932,83 @@ class Tree(Player):
     growImage = Player.load("tree", "grow.png")
     preGrowImage = Player.load("tree", "pregrow.png")
     text = "lol waht"
+class Sad(Player):
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super(Sad, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [16-3, 32-17, 16+3, 32-7]
+        self.image = Sad.idleImage
+        self.flyingHeight=3*Player.SCALE
+        self.xspeed = 2
+        self.init2()
+
+        self.first = [
+        [8, self.preSkullImage],
+        [14, self.skullImage, [19, 15, 24, 21, 16]],
+        [24, self.skullImage],
+        [30, self.preSkullImage],
+        ]
+
+        self.second = self.first
+
+        self.jump = [
+        [6, self.preJumpImage],
+        [12, self.jumpImage, [10, 24, 15, 29, 14, 40]],
+        [24, self.jumpImage],
+        [32, self.preJumpImage],
+        ]
+
+
+    def attack3(self, pressed):
+        self.executeAttack(self.jump, not self.pressed["2"])
+        if self.attackFrame==12:
+            self.yv=-12
+            r=(self.facingRight-0.5)*2
+            self.xv=max(self.xv*r,4)*r
+    
+    def attack4(self, pressed):
+        if self.attackFrame > 0:
+            if self.attackFrame%20<10:
+                self.image = self.magic1Image
+            else:
+                self.image = self.magic2Image
+            for i in Projectile.projectiles:
+                i.xv+=(self.facingRight-0.5)*0.5
+                i.xv*=0.95
+            for i in Player.players:
+                i.xv+=(self.facingRight-0.5)*0.5
+                i.hp-=0.2
+            self.hp+=0.1
+            if not self.pressed["4"]:
+                self.attackFrame = -2
+        else:
+            self.state=State.idle
+            self.image=self.idleImage
+            self.attackBox=None
+    
+    def attack5(self, pressed):
+        if self.attackFrame == 1:
+            self.image = self.skullImage
+            Projectile.projectiles.append(Projectile(self))
+            Player.ultSound.play()
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+        elif self.attackFrame <20:
+            self.image = self.preSkullImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    idleImage = Player.load("sad", "idle.png")
+    stunnedImage = Player.load("sad", "stunned.png")
+    magic1Image = Player.load("sad", "magic1.png")
+    magic2Image = Player.load("sad", "magic2.png")
+    preSkullImage = Player.load("sad", "preskull.png")
+    skullImage = Player.load("sad", "skull.png")
+    preJumpImage = Player.load("sad", "prejump.png")
+    jumpImage = Player.load("sad", "jump.png")
+    projbImage = Player.load("sad", "somehorn.png")
+    text = "Magically moves objects. Is depressed. "
 
 class Bird(Player):
 
@@ -953,7 +1033,7 @@ class Bird(Player):
         self.box = [16-3, 32-18, 16+3, 32-10]
         self.flyingHeight=4*Player.SCALE
         self.image = Bird.idleImage
-        self.hp = 180
+        self.maxhp = 200
         self.init2()
 
         self.first = [
@@ -1751,8 +1831,8 @@ class Penguin(Player):
     idleImage = ninjaImage #selesctscreen
 
 allClasses = [
-Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Alien, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Bird, Robot, Lizard, Golem, Alien, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Monster, Penguin,
 ]
 
 def restart():
