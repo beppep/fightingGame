@@ -129,7 +129,7 @@ class Projectile():
                 self.yv = 0.2
                 self.box = [18+1,18,18+6,18+5, 23]
         if isinstance(self.owner, Sad):
-            self.box = [16-2,15,16+3,20, 10, 10, 50]
+            self.box = [16-2,15,16+3,20, 50, 10, 50]
             self.x+=(self.owner.facingRight-0.5)*100
         self.xv+=self.owner.xv
 
@@ -943,10 +943,10 @@ class Sad(Player):
         self.init2()
 
         self.first = [
-        [8, self.preSkullImage],
-        [14, self.skullImage, [19, 15, 24, 21, 16]],
-        [24, self.skullImage],
-        [30, self.preSkullImage],
+        [13, self.preSkullImage],
+        [17, self.skullImage, [19, 15, 24, 21, 37]],
+        [31, self.skullImage],
+        [40, self.preSkullImage],
         ]
 
         self.second = self.first
@@ -954,8 +954,8 @@ class Sad(Player):
         self.jump = [
         [6, self.preJumpImage],
         [12, self.jumpImage, [10, 24, 15, 29, 14, 40]],
-        [24, self.jumpImage],
-        [32, self.preJumpImage],
+        [21, self.jumpImage],
+        [29, self.preJumpImage],
         ]
 
 
@@ -1045,7 +1045,7 @@ class Bird(Player):
 
         self.second = [
         [15, self.prePunchImage],
-        [25, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 40]],
+        [25, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 38]],
         [50, self.punchImage],
         [70, self.prePunchImage],
         ]
@@ -1065,7 +1065,7 @@ class Bird(Player):
 
         elif self.attackFrame < 180:
             self.image = self.elaImage
-            self.attackBox = [0, 15, 32, 32-8, 5]
+            self.attackBox = [0, 15, 32, 32-8, 6,5]
             if self.attackFrame%6>3:
                 self.image = self.elbImage
         
@@ -1220,7 +1220,7 @@ class Lizard(Player):
 
         self.second = [
         [9, self.prePunchImage],
-        [18, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 22, 18]],
+        [18, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 20]],
         [33, self.punchImage],
         [45, self.prePunchImage],
         ]
@@ -1353,9 +1353,9 @@ class Alien(Player):
 
         self.second = [
         [20, self.prePunchImage],
-        [25, self.punchImage, [17, 19, 23, 23, 18,-18, 35]],
+        [25, self.punchImage, [17, 19, 23, 23, 20,-10, 35]],
         [27, self.punchImage],
-        [42, self.prePunchImage],
+        [44, self.prePunchImage],
         ]
 
         self.ultimate = [
@@ -1382,10 +1382,10 @@ class Alien(Player):
         elif self.attackFrame < 8: 
             self.image = self.hairImage
             self.attackBox = [5, 16, 9, 24, 10,15]
-        elif self.attackFrame < 19:
+        elif self.attackFrame < 17:
             self.image = self.hairImage
             self.attackBox = None
-        elif self.attackFrame < 25:
+        elif self.attackFrame < 22:
             self.image = self.preHairImage
         else:
             self.state = State.idle
@@ -1629,7 +1629,7 @@ class Monster(Player):
 
         self.second = [
         [15, self.prePunchImage],
-        [21, self.punchImage, [22, 20, 26, 23, 30, 90, 10]],
+        [21, self.punchImage, [22, 20, 26, 23, 35, 90, 10]],
         [27, self.punchImage],
         [37, self.prePunchImage],
         [43, self.idleImage],
@@ -1922,11 +1922,11 @@ while State.jump_out == False:
 
         # HERE * * * * * * * * *
         choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-        #choices[0](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
+        #choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        #choices[1](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
-        for i in range(0):
+        for i in range(1):
             #random.choice(allClasses)(600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             choices[-i+1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
