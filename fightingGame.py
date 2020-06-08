@@ -110,7 +110,7 @@ class Projectile():
             self.x-=self.xv*3
         if isinstance(self.owner, Alien):
             self.xv = (self.facingRight-0.5) * -20
-            self.box = [3, 14, 7, 17, 7,0,10]
+            self.box = [3, 14, 7, 17, 7,10]
             self.x-=self.xv*4
             self.yv = .5
         if isinstance(self.owner, Monster):
@@ -473,7 +473,7 @@ class Player():
         self.facingRight = player.x>self.x #not player.facingRight
 
         self.hp -= damage
-        Player.hitLag = 0.02+damage/800
+        Player.hitLag = damage*0.003
         if stun:
             self.state = State.stunned
             self.attackFrame = 0
@@ -487,8 +487,8 @@ class Player():
         self.yv=-abs(knockback*0.2)
         self.xv=knockback*(self.facingRight-0.5)*-0.2
         #effects
-        Player.shake=damage//2
-        if damage>10+random.random()*10:
+        Player.shake+=int(damage*0.5)
+        if damage>10+random.random()*20:
             theImage = Player.hurtImage[self.facingRight]
             gameDisplay.blit(theImage, (self.x+self.facingRight*20, self.y))
         
@@ -525,7 +525,7 @@ class Player():
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
         factor = 0.3
-        leftEdge=(self.hurtboxes[0]+self.hurtboxes[2]-self.maxhp*factor)/2
+        leftEdge=(self.hurtboxes[0]+self.hurtboxes[2]-self.maxhp*factor)*0.5
         if self.ultCharge>self.CHARGE and not self.invisible:
             pygame.draw.rect(gameDisplay, (0, 255, 255), (leftEdge-4,self.hurtboxes[1]-32-4,self.maxhp*factor+8,16), 0)
             #pygame.draw.rect(gameDisplay, (0, 0, 255), \
@@ -571,15 +571,15 @@ class Puncher(Player):
         [109, self.longPunchImage, [32-7, 32-8-6, 32, 32-8, 40]],
         [130, self.longPunchImage],
         [141, self.punchImage],
-        [159, self.prePunchImage],
+        [155, self.prePunchImage],
         ]
 
         self.extreme = [
         [39, self.prePunchImage],
         [165, self.prePunchImage, None, True],
-        [170, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 45, 120]],
+        [170, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 50, 120]],
         [210, self.punchImage],
-        [226, self.prePunchImage],
+        [225, self.prePunchImage],
         ]
 
     def attack3(self, pressed):
@@ -624,17 +624,17 @@ class Big(Player):
         self.init2()
 
         self.first = [
-        [2, self.prePunchImage, [10, 17, 11, 32-9, 20]],
+        [3, self.prePunchImage, [10, 17, 11, 32-9, 20]],
         [12, self.prePunchImage],
         [15, self.midPunchImage],
-        [30, self.punchImage, [16, 16, 32-6, 32-8, 33, 50, 30]],
+        [30, self.punchImage, [16, 16, 32-6, 32-8, 33, 50, 33]],
         [45, self.punchImage],
         [52, self.midPunchImage],
         [60, self.prePunchImage],
         ]
 
         self.second = [
-        [2, self.prePunchImage, [10, 17, 11, 32-9, 20]],
+        [4, self.prePunchImage, [10, 17, 11, 32-9, 20]],
         [30, self.prePunchImage],
         [130, self.prePunchImage, None, True],
         [140, self.midPunchImage],
@@ -830,7 +830,7 @@ class Tree(Player):
         super(Tree, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-15, 16+3, 32-4]
         self.image = Tree.idleImage
-        self.CHARGE = 20
+        self.CHARGE = 25
         self.code = random.random()
         self.init2()
 
@@ -843,7 +843,7 @@ class Tree(Player):
 
         self.second = [
         [15, self.preKickImage],
-        [28, self.kickImage, [16, 20, 32-9, 32-7, 44]],
+        [28, self.kickImage, [16, 20, 32-9, 32-7, 41]],
         [40, self.kickImage],
         [50, self.preKickImage],
         ]
@@ -987,12 +987,14 @@ class Sad(Player):
             self.attackBox=None
     
     def attack5(self, pressed):
-        if self.attackFrame == 1:
+        if self.attackFrame<45:
+            self.image=self.stunnedImage
+        elif self.attackFrame == 45:
             self.image = self.skullImage
             Projectile.projectiles.append(Projectile(self))
             Player.ultSound.play()
             pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
-        elif self.attackFrame <20:
+        elif self.attackFrame <80:
             self.image = self.preSkullImage
         else:
             self.state = State.idle
@@ -1038,14 +1040,14 @@ class Bird(Player):
 
         self.first = [
         [8, self.prePunchImage],
-        [20, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 15]],
+        [20, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 16]],
         [24, self.punchImage],
         [34, self.prePunchImage],
         ]
 
         self.second = [
         [15, self.prePunchImage],
-        [25, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 38]],
+        [25, self.punchImage, [32-9, 32-8-7, 32-1, 32-10, 37]],
         [50, self.punchImage],
         [70, self.prePunchImage],
         ]
@@ -1127,16 +1129,16 @@ class Robot(Player):
 
         self.second = [
         [15, self.prePunchImage,None],
-        [30, self.punchImage, [24, 32-17, 27, 32-12, 8, 12]],
-        [80, self.punchImage, [24, 32-17, 27, 32-12, 8, 12],True],
-        [110, self.prePunchImage,None],
+        [30, self.punchImage, [24, 32-17, 27, 32-12, 6, 12]],
+        [100, self.punchImage, [24, 32-17, 27, 32-12, 5, 12],True],
+        [120, self.prePunchImage,None],
         ]
 
     def attack2(self, pressed):
         self.executeAttack(self.second, not self.pressed["2"])
         if self.attackFrame==15:
             Player.bzzzSound.play()
-        if self.attackFrame==81:
+        if self.attackFrame==101:
             Player.bzzzSound.stop()
 
     def attack3(self, pressed):
@@ -1208,30 +1210,29 @@ class Lizard(Player):
         self.box = [16-3, 32-17, 16+3, 32-4]
         self.image = Lizard.idleImage
         self.xspeed = 2.5
-        self.CHARGE = 30
+        self.CHARGE = 25
         self.init2()
 
         self.first = [
-        [6, self.prePunchImage],
+        [7, self.prePunchImage],
         [12, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 10]],
-        [18, self.punchImage],
-        [24, self.prePunchImage],
+        [17, self.punchImage],
+        [22, self.prePunchImage],
         ]
 
         self.second = [
-        [9, self.prePunchImage],
+        [10, self.prePunchImage],
         [18, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 20]],
         [33, self.punchImage],
-        [45, self.prePunchImage],
+        [40, self.prePunchImage],
         ]
         self.tail = [
         [7, self.preTailImage],
         [12, self.tailImage, [7, 32-4, 10, 32-2, 17, -17]],
-        [20, self.tailImage],
-        [30, self.idleImage],
+        [25, self.tailImage],
         ]
         self.lick = [
-        [8, self.preLickImage],
+        [6, self.preLickImage],
         [12, self.lickImage, [15, 32-13, 28, 32-12, 0,-30]],
         [15, self.lickImage],
         [22, self.preLickImage],
@@ -1288,17 +1289,17 @@ class Golem(Player):
         ]
 
         self.lick = [
-        [5, self.preLickImage],
-        [8, self.lickImage, [20, 9, 24, 13, 25]],
-        [14, self.lickImage],
-        [20, self.preLickImage],
+        [6, self.preLickImage],
+        [9, self.lickImage, [20, 9, 24, 13, 24]],
+        [17, self.lickImage],
+        [26, self.preLickImage],
         ]
 
         self.grass = [
-        [23, self.preGrassImage],
-        [43, self.grassImage, [21, 19, 32, 24, 5, 5]],
-        [48, self.grassImage, [21, 19, 32, 24, 12, 22]],
-        [64, self.preGrassImage],
+        [26, self.preGrassImage],
+        [46, self.grassImage, [21, 19, 32, 24, 5, 5]],
+        [51, self.grassImage, [21, 19, 32, 24, 12, 22]],
+        [69, self.preGrassImage],
         ]
 
         self.ultimate = [
@@ -1344,7 +1345,7 @@ class Alien(Player):
 
         self.first = [
         [10, self.prePunchImage],
-        [15, self.punchImage, [17, 19, 23, 23, 5,-10]],
+        [15, self.punchImage, [17, 19, 23, 23, 5,-7]],
         [18, self.punchImage],
         [22, self.prePunchImage],
         [32, self.punchImage, [17, 19, 23, 23, 12]],
@@ -1353,7 +1354,7 @@ class Alien(Player):
 
         self.second = [
         [20, self.prePunchImage],
-        [25, self.punchImage, [17, 19, 23, 23, 20,-10, 35]],
+        [25, self.punchImage, [17, 19, 23, 23, 22,-7, 33]],
         [27, self.punchImage],
         [44, self.prePunchImage],
         ]
@@ -1378,10 +1379,10 @@ class Alien(Player):
         if self.attackFrame < 5:
             self.image = self.preHairImage
             self.attackBox = None
-            self.xv=self.xv-(self.facingRight*2-1)*2        
+            self.xv=self.xv-(self.facingRight*2-1)*2
         elif self.attackFrame < 8: 
             self.image = self.hairImage
-            self.attackBox = [5, 16, 9, 24, 10,15]
+            self.attackBox = [5, 16, 9, 24, 15]
         elif self.attackFrame < 17:
             self.image = self.hairImage
             self.attackBox = None
@@ -1403,7 +1404,7 @@ class Alien(Player):
             self.image = self.fireImage
             Projectile.projectiles.append(Projectile(self))
         elif self.attackFrame < 27:
-            self.image = self.idleImage
+            self.image = self.fireImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -1516,7 +1517,7 @@ class Frog(Player):
 
         self.second = [
         [9, self.preLickImage],
-        [12, self.lickImage, [26, 18, 28, 21, 10, -30]],
+        [12, self.lickImage, [26, 18, 28, 21, 15, -25]],
         [18, self.lickImage],
         [38, self.preLickImage],
         ]
@@ -1545,7 +1546,7 @@ class Frog(Player):
         elif self.attackFrame < 505:
             self.image = self.jumpImage
             self.attackBox = [16-6, 32-8, 16+5, 32-3, 32]
-        elif self.attackFrame < 530:
+        elif self.attackFrame < 515:
             self.image = self.jumpImage
             self.attackBox = None
         else:
@@ -1568,7 +1569,7 @@ class Frog(Player):
         elif self.attackFrame < 510:
             self.image = self.jumpImage
             self.attackBox = [16-6, 32-8, 16+5, 32-3, 40]
-        elif self.attackFrame < 550:
+        elif self.attackFrame < 530:
             self.image = self.jumpImage
             self.attackBox = None
         else:
@@ -1596,7 +1597,7 @@ class Frog(Player):
         elif self.attackFrame < 510:
             self.image = self.jumpImage
             pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
-            self.attackBox = [16-6, 32-8, 16+5, 32-3, self.attackFrame//15+10, self.attackFrame//15+40]
+            self.attackBox = [16-6, 32-8, 16+5, 32-3, 50, 100]
         elif self.attackFrame < 530:
             self.image = self.jumpImage
             self.attackBox = None
@@ -1923,6 +1924,7 @@ while State.jump_out == False:
         # HERE * * * * * * * * *
         choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
         #choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        #choices[0](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[1])
         #choices[1](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
         
         AiFocus = True
