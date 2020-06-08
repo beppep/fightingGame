@@ -31,7 +31,7 @@ def initSound():
     pygame.mixer.music.play(-1)
 
 def endEffect():
-    pygame.draw.rect(gameDisplay, (200, 0, 100), (96,0,808,504), 0)
+    pygame.draw.rect(gameDisplay, (200, 0, 100), (0,0,1000,600), 0)
     Player.hitLag=1
     if len(Player.players)>2:
         Player.killSound.play()
@@ -488,8 +488,11 @@ class Player():
         self.xv=knockback*(self.facingRight-0.5)*-0.2
         #effects
         Player.shake+=int(damage*0.5)
-        if damage>10+random.random()*20:
+        if damage>10+random.random()*40:
             theImage = Player.hurtImage[self.facingRight]
+            gameDisplay.blit(theImage, (self.x+self.facingRight*20, self.y))
+        if damage>10+random.random()*30:
+            theImage = Player.hurtImage2[self.facingRight]
             gameDisplay.blit(theImage, (self.x+self.facingRight*20, self.y))
         
 
@@ -525,19 +528,22 @@ class Player():
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
         factor = 0.3
-        leftEdge=(self.hurtboxes[0]+self.hurtboxes[2]-self.maxhp*factor)*0.5
+        leftEdge=(self.hurtboxes[0]+self.hurtboxes[2]-self.maxhp*factor)*0.5+shakeX
         if self.ultCharge>self.CHARGE and not self.invisible:
-            pygame.draw.rect(gameDisplay, (0, 255, 255), (leftEdge-4,self.hurtboxes[1]-32-4,self.maxhp*factor+8,16), 0)
+            pygame.draw.rect(gameDisplay, (0, 255, 255), (leftEdge-4,self.hurtboxes[1]-32-4+shakeY,self.maxhp*factor+8,16), 0)
             #pygame.draw.rect(gameDisplay, (0, 0, 255), \
             #(self.hurtboxes[0],self.hurtboxes[1],self.hurtboxes[2]-self.hurtboxes[0],self.hurtboxes[3]-self.hurtboxes[1]), 0)
         if self.hp>0 and not self.invisible: #health bars
-            pygame.draw.rect(gameDisplay, (255, 0, 0), (leftEdge,self.hurtboxes[1]-32+1,self.maxhp*factor,6), 0)
-            pygame.draw.rect(gameDisplay, (0, 255, 0), (leftEdge,self.hurtboxes[1]-32,self.hp*factor,8), 0)
+            pygame.draw.rect(gameDisplay, (255, 0, 0), (leftEdge,self.hurtboxes[1]-32+1+shakeY,self.maxhp*factor,6), 0)
+            pygame.draw.rect(gameDisplay, (0, 255, 0), (leftEdge,self.hurtboxes[1]-32+shakeY,self.hp*factor,8), 0)
 
     
     hurtImage = pygame.image.load(os.path.join(filepath, "textures", "effect.png"))
     hurtImage = pygame.transform.scale(hurtImage, (8*32, 8*32))
     hurtImage = (pygame.transform.flip(hurtImage, True, False), hurtImage)
+    hurtImage2 = pygame.image.load(os.path.join(filepath, "textures", "effect2.png"))
+    hurtImage2 = pygame.transform.scale(hurtImage2, (8*32, 8*32))
+    hurtImage2 = (pygame.transform.flip(hurtImage2, True, False), hurtImage2)
     text = ""
     shake = 0
 
@@ -594,14 +600,14 @@ class Puncher(Player):
             self.image = self.punchImage
             self.yv-=4
             self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 10, -125, 43]
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         elif self.attackFrame < 43:
             self.image = self.prePunchImage
             self.attackBox = None
         elif self.attackFrame < 60:
             self.image = self.punchImage
             self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 50, 200, 100]
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -713,7 +719,7 @@ class Big(Player):
         elif self.attackFrame < 110:
             self.image = self.punchImage
             self.attackBox = [16, 16, 32-6, 32-8, 30, 100]
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
 
         else:
             self.state = State.idle
@@ -795,7 +801,7 @@ class Green(Player):
             self.image = self.skullImage
             Projectile.projectiles.append(Projectile(self, op=True))
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         elif self.attackFrame < 60:
             self.image = self.skullImage
         else:
@@ -898,7 +904,7 @@ class Tree(Player):
         if self.attackFrame == 1:
             Player.growSound.play()
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
 
             new = Tree(self.x, self.y, self.facingRight, self.controls, self.joystick)
             new.code = self.code
@@ -993,7 +999,7 @@ class Sad(Player):
             self.image = self.skullImage
             Projectile.projectiles.append(Projectile(self))
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         elif self.attackFrame <80:
             self.image = self.preSkullImage
         else:
@@ -1019,7 +1025,7 @@ class Bird(Player):
             self.ultCharge = 0
             self.yv=-22
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
 
         if self.attackFrame%20<10: #idle animation
             self.image = self.idlebImage
@@ -1180,14 +1186,14 @@ class Robot(Player):
     def attack5(self, pressed):
         if self.attackFrame==1:
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         if self.attackFrame < 60:
             if self.attackFrame%10 ==1:
                 self.image = self.fireImage
                 Projectile.projectiles.append(Projectile(self, op=True))
                 Player.hitSound.set_volume(0.4)
                 Player.hitSound.play()
-                pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+                pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
             else:
                 self.image = self.stunnedImage
         else:
@@ -1248,7 +1254,7 @@ class Lizard(Player):
     def passive(self):
         if self.pressed["5"] and self.ultCharge>self.CHARGE and not self.state==State.idle:
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
             self.ultCharge = 0
             self.stun = 0
             self.state = State.idle
@@ -1321,7 +1327,7 @@ class Golem(Player):
     def attack5(self, pressed):
         if self.attackFrame==1:
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         self.executeAttack(self.ultimate, not self.pressed["5"])
 
     idleImage = Player.load("golem", "idle.png")
@@ -1413,7 +1419,7 @@ class Alien(Player):
     def attack5(self, pressed):
         if self.attackFrame==1:
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         self.executeAttack(self.ultimate)
 
     idleImage = Player.load("alien", "idle.png")
@@ -1482,7 +1488,7 @@ class Can(Player):
 
     def attack5(self, pressed):
         Player.ultSound.play()
-        pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         self.image = self.prePunchImage
         self.state = State.idle
 
@@ -1580,7 +1586,7 @@ class Frog(Player):
     def attack5(self, pressed):
         if self.attackFrame==1:
             Player.ultSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         if self.attackFrame < 15: 
             self.image = self.stunnedImage
             self.facingRight = not self.facingRight
@@ -1596,7 +1602,7 @@ class Frog(Player):
                 self.attackFrame = 500
         elif self.attackFrame < 510:
             self.image = self.jumpImage
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
             self.attackBox = [16-6, 32-8, 16+5, 32-3, 50, 100]
         elif self.attackFrame < 530:
             self.image = self.jumpImage
@@ -1662,7 +1668,7 @@ class Monster(Player):
         if self.attackFrame==1:
             Player.ultSound.play()
             Player.growSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (96,0,808,504), 0)
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         if self.attackFrame < 217:
 
             self.yv-=0.5
@@ -1923,12 +1929,12 @@ while State.jump_out == False:
 
         # HERE * * * * * * * * *
         choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        #choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-        #choices[0](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[1])
-        #choices[1](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
+        choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+        #choices[0](300, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
+        #choices[1](500, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[1])
         
         AiFocus = True
-        for i in range(1):
+        for i in range(0):
             #random.choice(allClasses)(600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             choices[-i+1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
             Player.players[-1].random=1
@@ -1948,7 +1954,12 @@ while State.jump_out == False:
         shakeY = 0
     #background
     gameDisplay.blit(currentBackground, (0+shakeX,0+shakeY))
+    
+    #draw platforms
+    for player in Platform.platforms:
+        player.draw()
 
+    #draw flashes
     pressed = pygame.key.get_pressed()
     for player in Player.players:
         player.getPressed(pressed)
@@ -1956,10 +1967,10 @@ while State.jump_out == False:
     for player in Player.players+Projectile.projectiles:
         player.physics()
 
-    #draw
-    for player in Player.players+Projectile.projectiles+Platform.platforms:
+    #draw players
+    for player in Player.players+Projectile.projectiles:
         player.draw()
-        
+
     pygame.display.update()
     clock.tick(State.frameRate)
     if Player.hitLag:
