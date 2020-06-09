@@ -1862,16 +1862,24 @@ def restart():
         if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
             num+=1
             lag+=0.1
+        if pressed[pygame.K_p]:
+            Player.AIoption+=1
+            if Player.AIoption==3:
+                Player.AIoption=0
+                State.playerCount+=1
+            if Player.AIoption==2:
+                State.playerCount-=1
+            lag+=0.2
         if pressed[pygame.K_r]:
             choices.append(random.choice(allClasses))
             num=0
-            if len(choices)==State.playerCount:
+            if len(choices)>=State.playerCount:
                 return choices
             lag+=0.5
         if pressed[pygame.K_SPACE] or pressed[pygame.K_RETURN]:
             choices.append(allClasses[num%len(allClasses)])
             num=0
-            if len(choices)==State.playerCount:
+            if len(choices)>=State.playerCount:
                 return choices
             lag+=0.5
 
@@ -1880,15 +1888,17 @@ def restart():
         pygame.draw.rect(gameDisplay,(200,200,200),(400+64,0,16*8,200+28*8),0)
         for i in range(len(choices)):
             gameDisplay.blit(choices[i].idleImage[1], (100*i, 0))
-        for i in [-2,-1,0,1,2]:
+        for i in [-4,-3,-2,-1,0,1,2,3,4]:
             gameDisplay.blit(allClasses[(num-i)%len(allClasses)].idleImage[1], (400-100*i, 200))
         
         name = allClasses[num%len(allClasses)].__name__
         text = allClasses[num%len(allClasses)].text
         textsurface = myfont.render(name, True, (0, 0, 0))
         textsurface2 = myfont2.render(text, True, (0, 0, 0))
+        textsurfaceAI = myfont2.render("player 2 = "+["arrowkeys","AI","off"][Player.AIoption]+"    (p)", True, (0,0,0))
         gameDisplay.blit(textsurface,(545-len(name)*24,450))
         gameDisplay.blit(textsurface2,(10,570))
+        gameDisplay.blit(textsurfaceAI,(777,10))
 
         pygame.display.update()
         clock.tick(100)
@@ -1916,9 +1926,10 @@ for i in range(stickNum):
     sticks.append(pygame.joystick.Joystick(i))
     sticks[-1].init()
 
-State.playerCount = 2 # HERE * * * * * * * * *
+State.playerCount = 2+len(sticks) # HERE * * * * * * * * *
 State.frameRate = 75
 State.jump_out = False
+Player.AIoption = 0 #0:player 1:ai 2:off
 while State.jump_out == False:
     #pygame.event.get()
     for event in pygame.event.get():
@@ -1927,18 +1938,15 @@ while State.jump_out == False:
     if len(Player.players)<2:
         choices = restart()
 
-        # HERE * * * * * * * * *
         choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
-        choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-        #choices[0](300, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[0])
-        #choices[1](500, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[1])
-        
+        if Player.AIoption != 2:
+            choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            if Player.AIoption == 1:
+                Player.players[-1].random=1
+        humansBefore=len(Player.players)
+        for i in range(len(sticks)):
+            choices[humansBefore+i](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[i])
         AiFocus = True
-        for i in range(0):
-            #random.choice(allClasses)(600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-            choices[-i+1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
-            Player.players[-1].random=1
-        # HERE * * * * * * * * *
 
         currentBackground = random.choice(backgrounds)
         Platform.restart()
