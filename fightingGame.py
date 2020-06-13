@@ -176,7 +176,7 @@ class Projectile():
                 continue
             if self.hurtboxes[2]>otherBox[0] and self.hurtboxes[0]<otherBox[2]:
                 if self.hurtboxes[3]>otherBox[1] and self.hurtboxes[1]<otherBox[3]:
-                    if self in Projectile.projectiles:
+                    if self in Projectile.projectiles and not (isinstance(player, Player) and player.invincible):
                         Projectile.projectiles.remove(self)
                     if isinstance(player, Player):
                         if (player.state==3 and type(player) in [Golem, Lizard]) or (player.state in [1,2] and type(player) in [Frog, Monster]):
@@ -1787,7 +1787,7 @@ class Penguin(Player):
             self.image = self.preHatImage
         elif self.attackFrame == 12:
             self.wizard = not self.wizard
-        elif self.attackFrame < 15:#+6*self.wizard:
+        elif self.attackFrame < 15+6*self.wizard:
             self.image = self.idleImage
         else:
             self.state = State.idle
@@ -1803,8 +1803,7 @@ class Penguin(Player):
         elif self.attackFrame==10:
             self.invincible=False
         if self.attackFrame < 96:
-            self.facingRight = random.randint(0,1)
-            self.image = random.choice([self.haloImage,self.halo2Image,self.wizardImage,self.ninjaImage])
+            self.image = random.choice([self.haloImage,self.halo2Image,self.wizardImage])
             self.xv=(self.facingRight-0.5)*8
             self.yv-=1
             self.yv*=0.95
@@ -1863,12 +1862,20 @@ def restart():
         if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
             num+=1
             lag+=0.1
-        if pressed[pygame.K_p]:
+        if pressed[pygame.K_1]:
             Player.AIoption+=1
             if Player.AIoption==3:
                 Player.AIoption=0
                 State.playerCount+=1
             if Player.AIoption==2:
+                State.playerCount-=1
+            lag+=0.2
+        if pressed[pygame.K_2]:
+            Player.AI2option+=1
+            if Player.AI2option==3:
+                Player.AI2option=0
+                State.playerCount+=1
+            if Player.AI2option==2:
                 State.playerCount-=1
             lag+=0.2
         if pressed[pygame.K_r]:
@@ -1896,10 +1903,12 @@ def restart():
         text = allClasses[num%len(allClasses)].text
         textsurface = myfont.render(name, True, (0, 0, 0))
         textsurface2 = myfont2.render(text, True, (0, 0, 0))
-        textsurfaceAI = myfont2.render("player 2 = "+["arrowkeys","AI","off"][Player.AIoption]+"    (p)", True, (0,0,0))
+        textsurfaceAI = myfont2.render("player 1: "+["XCVB","AI","off"][Player.AIoption]+"    (1)", True, (0,0,0))
+        textsurfaceAI2 = myfont2.render("player 2: "+["UIOP","AI","off"][Player.AI2option]+"    (2)", True, (0,0,0))
         gameDisplay.blit(textsurface,(545-len(name)*24,450))
         gameDisplay.blit(textsurface2,(10,570))
         gameDisplay.blit(textsurfaceAI,(777,10))
+        gameDisplay.blit(textsurfaceAI2,(777,50))
 
         pygame.display.update()
         clock.tick(100)
@@ -1931,7 +1940,8 @@ for i in range(stickNum):
 State.playerCount = 2+len(sticks)
 State.frameRate = 75
 State.jump_out = False
-Player.AIoption = 0 #0:player 1:ai 2:off
+Player.AIoption = 0 #0:XCVB 1:ai 2:off
+Player.AI2option = 0 #0:UIOP 1:ai 2:off
 while State.jump_out == False:
     #pygame.event.get()
     for event in pygame.event.get():
@@ -1939,16 +1949,20 @@ while State.jump_out == False:
             State.jump_out = True
     if len(Player.players)<2:
         choices = restart()
-
-        choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+        
         if Player.AIoption != 2:
-            choices[1](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
             if Player.AIoption == 1:
+                Player.players[-1].random=1
+        humansBefore=len(Player.players)
+        if Player.AI2option != 2:
+            choices[humansBefore](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            if Player.AI2option == 1:
                 Player.players[-1].random=1
         humansBefore=len(Player.players)
         for i in range(len(sticks)):
             choices[humansBefore+i](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[i])
-        AiFocus = True
+        AiFocus = 0
 
         currentBackground = random.choice(backgrounds)
         Platform.restart()
