@@ -113,6 +113,10 @@ class Projectile():
             self.box = [3, 14, 7, 17, 7,10]
             self.x-=self.xv*4
             self.yv = .5
+        if isinstance(self.owner, Glitch):
+            self.xv = (self.facingRight-0.5) * 40
+            self.box = [23, 19, 32, 23, 35]
+            self.x-=self.xv*2
         if isinstance(self.owner, Monster):
             self.xv = (self.facingRight-0.5) * 8
             self.yv = -1
@@ -1111,7 +1115,7 @@ class Bird(Player):
     preelImage = Player.load("bird", "preel.png")
     elaImage = Player.load("bird", "ela.png")
     elbImage = Player.load("bird", "elb.png")
-    text = "can fly and dodge and is op"
+    text = "The electric avian predator"
 class Robot(Player):
     
     def passive(self):
@@ -1200,7 +1204,12 @@ class Robot(Player):
             self.state = State.idle
             self.image = self.idleImage
             self.attackBox = None
-
+    nam1=["A","B","C","X","Y","Z"]
+    nam2=[str(i) for i in range(10)]
+    name = random.choice(nam1)
+    for i in range(random.randint(1,2)):
+        name = name + random.choice(nam1+nam2)
+    text = "name: "+name
     idleImage = Player.load("robot", "idle.png")
     idlebImage = Player.load("robot", "idleb.png")
     stunnedImage = Player.load("robot", "stunned.png")
@@ -1269,7 +1278,7 @@ class Lizard(Player):
     punchImage = Player.load("lizard", "punch.png")
     preTailImage = Player.load("lizard", "prekick.png")
     tailImage = Player.load("lizard", "kick.png")
-    text = "Cool pro animation cancel character!"
+    text = "To master the reptile you must first understand endlag"
 class Golem(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1339,7 +1348,7 @@ class Golem(Player):
     grassImage = Player.load("golem", "grass.png")
     preLickImage = Player.load("golem", "prelick.png")
     lickImage = Player.load("golem", "lick.png")
-    text = "Isn't from space."
+    text = "Animated igneous rock infused with elemental powers"
 class Alien(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1437,7 +1446,107 @@ class Alien(Player):
     rise2Image = Player.load("alien", "rise2.png")
     rise3Image = Player.load("alien", "rise3.png")
     rise4Image = Player.load("alien", "rise4.png")
-    text = "Is from space."
+    text = "Trained in higher gravity"
+class Glitch(Player):
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super(Glitch, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [13, 15, 19, 28]
+
+        self.image = self.idleImage
+        self.init2()
+
+        self.first = [
+        [10, self.prePunchImage],
+        [16, self.punchImage, [15, 19, 22, 22, 17,34,17]],
+        [22, self.punchImage],
+        [32, self.prePunchImage]
+        ]
+        self.second = [
+        [15, self.idleImage],
+        [20, self.chimneyImage, [15, 8, 20, 13, 30,100,25]],
+        [22, self.chimneyImage],
+        [25, self.idleImage],
+        ]
+        self.glitch = [
+        #[10, self.idleImage],
+        [27, self.preGlitchImage],
+        [40, self.glitchImage, [9, 15, 23, 27, 6,-4,2]],
+        [45, self.glitchImage, [9, 15, 23, 27, 15,50,14]],
+        [60, self.idleImage],
+        ]
+
+    def passive(self):
+        if(self.image==self.shimmerImage):
+            self.xspeed = 4
+            self.box = [13,11,19,16]
+            self.flyingHeight=12*Player.SCALE
+
+        else:
+            self.box = [13, 15, 19, 28]
+            self.xspeed = 2
+            self.flyingHeight=0
+    def attack1(self, pressed):
+        if(self.image==self.shimmerImage):
+            self.attackFrame=11
+        self.executeAttack(self.first, not self.pressed["1"])
+    def attack2(self, pressed):
+        if(self.image==self.shimmerImage):
+            self.attackFrame=13
+        self.executeAttack(self.second, not self.pressed["2"])
+    def attack3(self, pressed):
+        if(self.image==self.shimmerImage):
+            self.attackFrame=25
+        self.executeAttack(self.glitch, not self.pressed["3"])
+
+    def attack4(self, pressed):
+        if(self.image==self.shimmerImage):
+            self.attackFrame=46
+
+        if self.attackFrame < 12:
+            self.image = self.prePunchImage
+        elif self.attackFrame < 20: 
+            self.image = self.preFire1Image
+        elif self.attackFrame < 28: 
+            self.image = self.preFire2Image
+        elif self.attackFrame < 36: 
+            self.image = self.preFire3Image
+        elif self.attackFrame < 44: 
+            self.image = self.preFire4Image
+        elif self.attackFrame < 48: 
+            self.image = self.fireImage
+        elif self.attackFrame == 48:
+            self.image = self.fireImage
+            Projectile.projectiles.append(Projectile(self))
+        elif self.attackFrame < 55:
+            self.image = self.punchImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack5(self, pressed):
+        Player.ultSound.play()
+        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        self.image = self.shimmerImage
+        self.state = State.idle
+
+    idleImage = Player.load("glitch", "idle.png")
+    stunnedImage = Player.load("glitch", "stunned.png")
+    fireImage = Player.load("glitch", "fire.png")
+    prePunchImage = Player.load("glitch", "prepunch.png")
+    punchImage = Player.load("glitch", "punch.png")
+    shimmerImage = Player.load("glitch", "shimmer.png")
+    chimneyImage = Player.load("glitch", "chimney.png")
+    projbImage = Player.load("glitch", "proj.png")
+    
+    preGlitchImage = Player.load("glitch", "preGlitch.png")
+    glitchImage = Player.load("glitch", "glitch.png")
+    preFire1Image = Player.load("glitch", "preFire1.png")
+    preFire2Image = Player.load("glitch", "preFire2.png")
+    preFire3Image = Player.load("glitch", "preFire3.png")
+    preFire4Image = Player.load("glitch", "preFire4.png")
+    text = "A glitch in the simulation"
 
 class Can(Player):
 
@@ -1838,8 +1947,8 @@ class Penguin(Player):
     idleImage = ninjaImage #selesctscreen
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Glitch, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
 ]
 
 def restart():
