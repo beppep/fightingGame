@@ -4,7 +4,7 @@ welcone!!
 it is fightingGame 1.13.3
 
 i made the first 5 characters.
-therpomanager made 5 more.
+thepromanager made 7 more.
 sme aothers too.
 
 All have 4 attacks +ult
