@@ -1,7 +1,7 @@
 this is the readme flie.
 welcone!!
 
-it is fightingGame 1.13.3
+it is fightingGame 1.15.0
 
 i made the first 5 characters.
 thepromanager made 7 more.
