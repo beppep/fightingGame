@@ -183,7 +183,7 @@ class Projectile():
                     if self in Projectile.projectiles and not (isinstance(player, Player) and player.invincible):
                         Projectile.projectiles.remove(self)
                     if isinstance(player, Player):
-                        if (player.state==3 and type(player) in [Golem, Lizard]) or (player.state in [1,2] and type(player) in [Frog, Monster]):
+                        if (player.state==3 and type(player) in [Golem, Lizard]) or (player.state in [1,2] and type(player) in [Frog, Monster, Animals]):
                             player.hp=min(player.hp+30, player.maxhp)
                             Player.lickSound.play()
                             Player.growSound.play()
@@ -307,7 +307,9 @@ class Player():
             if AiFocus:
                 target = Player.players[0]
             else:
-                target = random.choice(Player.players)
+                enemies = Player.players[:]
+                enemies.remove(self)
+                target = random.choice(enemies)
             if random.random()<0.1:
                 self.pressed["d"] = random.randint(0,1)
             if random.randint(0,20)==0 and target!=self:
@@ -525,16 +527,6 @@ class Player():
         return (pygame.transform.flip(image, True, False), image)
 
     def draw(self):
-        
-        if not self.invisible: #character
-            image = self.image[self.facingRight]
-            gameDisplay.blit(image, (self.x+shakeX, self.y+shakeY))
-        """
-        if random.random()<.1: #yellow
-            if self.hitboxes:
-                pygame.draw.rect(gameDisplay, (255, 255, 0), \
-                (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
-        """
         factor = 0.3
         leftEdge=(self.hurtboxes[0]+self.hurtboxes[2]-self.maxhp*factor)*0.5+shakeX
         if self.ultCharge>self.CHARGE and not self.invisible:
@@ -543,6 +535,15 @@ class Player():
             pygame.draw.rect(gameDisplay, (255, 0, 0), (leftEdge,self.hurtboxes[1]-32+1+shakeY,self.maxhp*factor,6), 0)
             pygame.draw.rect(gameDisplay, (0, 255, 0), (leftEdge,self.hurtboxes[1]-32+shakeY,self.hp*factor,8), 0)
 
+        if not self.invisible: #character
+            image = self.image[self.facingRight]
+            gameDisplay.blit(image, (self.x+shakeX, self.y+shakeY))
+        """
+        if random.random()<.5: #yellow
+            if self.hitboxes:
+                pygame.draw.rect(gameDisplay, (255, 255, 0), \
+                (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
+        """
     
     hurtImage = pygame.image.load(os.path.join(filepath, "textures", "effect.png"))
     hurtImage = pygame.transform.scale(hurtImage, (8*32, 8*32))
@@ -1023,6 +1024,95 @@ class Sad(Player):
     jumpImage = Player.load("sad", "jump.png")
     projbImage = Player.load("sad", "somehorn.png")
     text = "Magically moves objects. Is depressed. "
+class Animals(Player):
+
+    def __init__(self, x, y, facingRight, controls, joystick=None):
+        super(Animals, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [16-5, 19, 16+5, 32-4]
+        self.image = self.idleImage
+        self.init2()
+
+        self.first = [
+        [5, self.prePunchImage],
+        [10, self.punchImage, [24,21,26,23, 10]],
+        [15, self.punchImage],
+        [25, self.prePunchImage],
+        ]
+
+        self.second = [
+        [10, self.prePunchImage],
+        [15, self.punchImage, [24,21,26,23, 10,0,14]],
+        [25, self.punchImage],
+        [30, self.postPunchImage, [24,21,26,23, 10,-60,10]],
+        [35, self.prePunchImage, [22,14,24,16, 10,-60,10]],
+        ]
+
+        self.third = [
+        [15, self.preKickImage],
+        [20, self.kickImage, [15,28,19,32, 30]],
+        [30, self.kickImage],
+        [40, self.preKickImage],
+        ]
+
+    def attack1(self, pressed):
+        self.executeAttack(self.first, not self.pressed["1"])
+        if self.attackFrame==1:
+            Player.lickSound.play()
+    def attack2(self, pressed):
+        self.executeAttack(self.second, not self.pressed["2"])
+        if self.attackFrame==1:
+            Player.lickSound.play()
+    def attack3(self, pressed):
+        self.executeAttack(self.third, not self.pressed["3"])
+
+    def attack4(self, pressed):
+        if self.attackFrame<10:
+            self.image=self.preFlyImage
+        elif self.attackFrame<100:
+            if self.attackFrame%10<5:
+                self.image = self.flyImage
+                self.attackBox=None
+            else:
+                self.image = self.fly2Image
+                self.attackBox=[10,12,23,15,5,-5]
+
+            if(self.pressed["d"]):
+                self.xv=min(self.xspeed*2, self.xv+0.1)
+                self.facingRight = True
+            if(self.pressed["a"]):
+                self.xv=max(-self.xspeed*2, self.xv-0.1)
+                self.facingRight = False
+
+            self.yv-=1
+            self.yv=self.yv*0.95
+            if not (self.pressed["4"]):
+                self.attackFrame=99
+        elif self.attackFrame<110:
+            self.image = self.preFlyImage
+            self.yv=self.yv*0.95
+            self.attackBox = None
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack5(self, pressed):
+        Player.ultSound.play()
+        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        self.image = self.prePunchImage
+        self.state = State.idle
+
+    idleImage = Player.load("animals", "idle.png")
+    stunnedImage = Player.load("animals", "stunned.png")
+    prePunchImage = Player.load("animals", "prelick.png")
+    punchImage = Player.load("animals", "lick.png")
+    postPunchImage = Player.load("animals", "postlick.png")
+    preKickImage = Player.load("animals", "prekick.png")
+    kickImage = Player.load("animals", "kick.png")
+    preFlyImage = Player.load("animals", "prefly.png")
+    flyImage = Player.load("animals", "fly.png")
+    fly2Image = Player.load("animals", "fly2.png")
+    text = ""
 
 class Bird(Player):
 
@@ -1332,6 +1422,8 @@ class Golem(Player):
         if self.attackFrame==20:
             Player.bzzzSound.play()
             Player.growSound.play()
+        if self.attackFrame>20:
+            self.yv*=0.9
         self.executeAttack(self.grass, not self.pressed["4"])
         #self.state = State.idle (??
 
@@ -1499,6 +1591,8 @@ class Glitch(Player):
     def attack3(self, pressed):
         if(self.image==self.shimmerImage):
             self.attackFrame=25
+        if self.yv>0:
+            self.yv*=0.9
         self.executeAttack(self.glitch, not self.pressed["3"])
 
     def attack4(self, pressed):
@@ -1507,6 +1601,8 @@ class Glitch(Player):
 
         if self.attackFrame < 12:
             self.image = self.prePunchImage
+        elif self.attackFrame < 16: 
+            self.image = self.punchImage
         elif self.attackFrame < 20: 
             self.image = self.preFire1Image
         elif self.attackFrame < 28: 
@@ -1520,8 +1616,12 @@ class Glitch(Player):
         elif self.attackFrame == 48:
             self.image = self.fireImage
             Projectile.projectiles.append(Projectile(self))
+            Player.hitSound.set_volume(0.4)
+            Player.hitSound.play()
+            Player.shake=10
+            self.xv-=(self.facingRight-0.5)*4
         elif self.attackFrame < 55:
-            self.image = self.punchImage
+            self.image = self.prePunchImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -1782,7 +1882,7 @@ class Monster(Player):
             pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         if self.attackFrame < 217:
 
-            self.yv-=0.5
+            self.yv-=0.4
             self.image = self.prePunchImage
             self.hp=min(self.hp+0.5, self.maxhp)
             self.facingRight = not self.facingRight
@@ -1947,8 +2047,8 @@ class Penguin(Player):
     idleImage = ninjaImage #selesctscreen
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Glitch, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
 ]
 
 def restart():
