@@ -140,7 +140,8 @@ class Projectile():
     def keys(self, pressed):
         nevercalled
         pass
-
+    def confirmedHit(self,damage):
+        pass   
     def draw(self):
         gameDisplay.blit(self.image[self.facingRight], (self.x+random.randint(-8,8)*self.op+shakeX, self.y+random.randint(-8,8)*self.op+shakeY))
         """
@@ -472,6 +473,7 @@ class Player():
     def hurt(self, player, damage, knockback=None, stun=None): #player arg is stupid here. Just send direction or x coord.
         if(self.invincible):
             return
+        player.confirmedHit(damage)
         Player.hitSound.set_volume(damage/50)
         Player.hitSound.play()
         if(knockback==None):
@@ -503,7 +505,8 @@ class Player():
             theImage = Player.hurtImage2[self.facingRight]
             gameDisplay.blit(theImage, (self.x+self.facingRight*20, self.y))
         
-
+    def confirmedHit(self,damage):
+        pass
     def generateBox(self, data):
         new = [self.x+data[0]*Player.SCALE, self.y+data[1]*Player.SCALE, self.x+data[2]*Player.SCALE, self.y+data[3]*Player.SCALE]
         if len(data)>4:
@@ -1649,6 +1652,104 @@ class Glitch(Player):
     preFire3Image = Player.load("glitch", "preFire3.png")
     preFire4Image = Player.load("glitch", "preFire4.png")
     text = "A glitch in the simulation"
+class Rat(Player):
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super(Rat, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [14, 17, 18, 28]
+        
+        self.xspeed=1.8
+
+        self.image = self.idleImage
+        self.init2()
+
+        self.first = [
+        [7, self.prePunchImage],
+        [11, self.punchImage, [18, 17, 24, 25, 9,9,8]],
+        [20, self.prePunchImage],
+        ]
+        self.second = [
+        [5, self.idleImage],
+        [10, self.preJump1Image],
+        [15, self.preJump2Image],
+        [20, self.preTail1Image],
+        [27, self.nibbleImage, [21, 25, 25, 29, 5,-5,15]],
+        [34, self.preTail1Image],
+        [41, self.nibbleImage, [21, 25, 25, 29, 10,-5,15]],
+        [48, self.preTail1Image],
+        [55, self.nibbleImage, [21, 25, 25, 29, 15,30,19]],
+        [62, self.preTail1Image],
+        [70, self.preJump1Image],
+        ]
+        self.tail = [
+        [4, self.idleImage],
+        [9, self.preJump1Image],
+        [14, self.preJump2Image],
+        [18, self.preTail1Image],
+        [25, self.preTail2Image],
+        [31, self.tailImage, [20, 8, 32, 20, 30,30,30]],
+        [35, self.preTail2Image],
+        [40, self.preTail1Image],
+        [45, self.preJump1Image],
+        ]
+
+    def passive(self):
+        self.xspeed=max(1.8,self.xspeed*0.996)
+    def confirmedHit(self,damage):
+        self.xspeed+=damage/8
+    def attack3(self, pressed):
+        if self.attackFrame < 6:
+            self.image = self.idleImage
+        elif self.attackFrame < 12: 
+            self.image = self.preJump1Image
+        elif self.attackFrame < 18: 
+            self.image = self.preJump2Image
+        elif self.attackFrame < 24: 
+            self.image = self.preTail1Image
+        elif self.attackFrame < 30:
+            self.image = self.jumpImage
+            self.xv=(self.facingRight*2-1)*(self.xspeed*2)
+            self.yv=-4
+        elif self.attackFrame < 34:
+            self.image = self.jumpImage
+        elif self.attackFrame < 40:
+            self.attackBox = [18, 17, 25, 25, 5+4*self.xspeed,5+4*self.xspeed,5+4*self.xspeed]
+            self.image = self.punchImage
+        elif self.attackFrame < 45:
+            self.attackBox = None
+            self.image = self.punchImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack4(self, pressed):
+        self.executeAttack(self.tail, not self.pressed["4"])
+
+    def attack5(self, pressed):
+        Player.ultSound.play()
+        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        self.xspeed+=4.5
+        self.state = State.idle
+        self.image = self.idleImage
+        self.attackBox = None
+
+
+    idleImage = Player.load("rat", "idle.png")
+    stunnedImage = Player.load("rat", "stunned.png")
+    prePunchImage = Player.load("rat", "prepunch.png")
+    punchImage = Player.load("rat", "punch.png")
+
+    jumpImage = Player.load("rat", "jump.png")
+    nibbleImage = Player.load("rat", "nibble.png")
+    preJump1Image = Player.load("rat", "preJump1.png")
+    preJump2Image = Player.load("rat", "preJump2.png")
+    
+    preTail1Image = Player.load("rat", "preTail1.png")
+    preTail2Image = Player.load("rat", "preTail2.png")
+    tailImage = Player.load("rat", "tail.png")
+
+    text = "Technically a mouse"
 
 class Can(Player):
 
@@ -2047,8 +2148,8 @@ class Penguin(Player):
     idleImage = ninjaImage #selesctscreen
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Monster, Penguin,
 ]
 
 def restart():
@@ -2152,10 +2253,14 @@ State.jump_out = False
 Player.AIoption = 0 #0:XCVB 1:ai 2:off
 Player.AI2option = 0 #0:UIOP 1:ai 2:off
 while State.jump_out == False:
+
     #pygame.event.get()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             State.jump_out = True
+    if Player.hitLag:
+        time.sleep(Player.hitLag)
+        Player.hitLag=0
     if len(Player.players)<2:
         choices = restart()
         
@@ -2206,9 +2311,7 @@ while State.jump_out == False:
 
     pygame.display.update()
     clock.tick(State.frameRate)
-    if Player.hitLag:
-        time.sleep(Player.hitLag)
-        Player.hitLag=0
+    
     
 pygame.quit()
 quit()
