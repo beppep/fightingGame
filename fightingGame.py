@@ -541,13 +541,12 @@ class Player():
         if not self.invisible: #character
             image = self.image[self.facingRight]
             gameDisplay.blit(image, (self.x+shakeX, self.y+shakeY))
-        """
+        
         if random.random()<.5: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
-        """
-    
+            
     hurtImage = pygame.image.load(os.path.join(filepath, "textures", "effect.png"))
     hurtImage = pygame.transform.scale(hurtImage, (8*32, 8*32))
     hurtImage = (pygame.transform.flip(hurtImage, True, False), hurtImage)
@@ -1077,7 +1076,7 @@ class Animals(Player):
                 self.attackBox=None
             else:
                 self.image = self.fly2Image
-                self.attackBox=[10,12,23,15,5,-5]
+                self.attackBox=[10,12,23,15,5,-7]
 
             if(self.pressed["d"]):
                 self.xv=min(self.xspeed*2, self.xv+0.1)
@@ -1657,7 +1656,7 @@ class Rat(Player):
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Rat, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [14, 17, 18, 28]
-        
+        self.hp = 200
         self.xspeed=1.8
 
         self.image = self.idleImage
@@ -1665,36 +1664,36 @@ class Rat(Player):
 
         self.first = [
         [7, self.prePunchImage],
-        [11, self.punchImage, [18, 17, 24, 25, 9,9,8]],
-        [20, self.prePunchImage],
+        [12, self.punchImage, [18, 17, 24, 25, 9,9,8]],
+        [22, self.prePunchImage],
         ]
         self.second = [
         [5, self.idleImage],
         [10, self.preJump1Image],
         [15, self.preJump2Image],
         [20, self.preTail1Image],
-        [27, self.nibbleImage, [21, 25, 25, 29, 5,-5,15]],
+        [27, self.nibbleImage, [21, 25, 25, 29, 10,-5,15]],
         [34, self.preTail1Image],
-        [41, self.nibbleImage, [21, 25, 25, 29, 10,-5,15]],
+        [41, self.nibbleImage, [21, 25, 25, 29, 15,-5,15]],
         [48, self.preTail1Image],
-        [55, self.nibbleImage, [21, 25, 25, 29, 15,30,19]],
+        [55, self.nibbleImage, [21, 25, 25, 29, 20,30,19]],
         [62, self.preTail1Image],
-        [70, self.preJump1Image],
+        [68, self.preJump1Image],
         ]
         self.tail = [
         [4, self.idleImage],
         [9, self.preJump1Image],
         [14, self.preJump2Image],
-        [18, self.preTail1Image],
+        [20, self.preTail1Image],
         [25, self.preTail2Image],
-        [31, self.tailImage, [20, 8, 32, 20, 30,30,30]],
-        [35, self.preTail2Image],
-        [40, self.preTail1Image],
-        [45, self.preJump1Image],
+        [29, self.tailImage, [22, 8, 32, 19, 20,30,25]],
+        [41, self.preTail2Image],
+        [49, self.preTail1Image],
+        [59, self.preJump1Image],
         ]
 
     def passive(self):
-        self.xspeed=max(1.8,self.xspeed*0.996)
+        self.xspeed=max(1.8,self.xspeed*0.997)
     def confirmedHit(self,damage):
         self.xspeed+=damage/8
     def attack3(self, pressed):
@@ -1712,7 +1711,7 @@ class Rat(Player):
             self.yv=-4
         elif self.attackFrame < 34:
             self.image = self.jumpImage
-        elif self.attackFrame < 40:
+        elif self.attackFrame < 42:
             self.attackBox = [18, 17, 25, 25, 5+4*self.xspeed,5+4*self.xspeed,5+4*self.xspeed]
             self.image = self.punchImage
         elif self.attackFrame < 45:
@@ -1729,7 +1728,7 @@ class Rat(Player):
     def attack5(self, pressed):
         Player.ultSound.play()
         pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
-        self.xspeed+=4.5
+        self.xspeed+=6
         self.state = State.idle
         self.image = self.idleImage
         self.attackBox = None
