@@ -134,7 +134,13 @@ class Projectile():
                 self.box = [18+1,18,18+6,18+5, 23]
         if isinstance(self.owner, Sad):
             self.box = [16-2,15,16+3,20, 50, 10, 50]
-            self.x+=(self.owner.facingRight-0.5)*100
+            self.x+=(self.owner.facingRight-0.5)*120
+            self.xv=(self.owner.facingRight-0.5)*0
+        if isinstance(self.owner, Animals):
+            self.box = [24,22,25,23, 3,15,10]
+            self.y+=(self.owner.attackFrame%7)*6-16
+            self.xv=(self.owner.facingRight-0.5) * 16
+            self.x-=self.xv
         self.xv+=self.owner.xv
 
     def keys(self, pressed):
@@ -143,7 +149,7 @@ class Projectile():
     def confirmedHit(self,damage):
         pass   
     def draw(self):
-        gameDisplay.blit(self.image[self.facingRight], (self.x+random.randint(-8,8)*self.op+shakeX, self.y+random.randint(-8,8)*self.op+shakeY))
+        gameDisplay.blit(self.image[self.facingRight], (self.x+random.randint(-1,1)*8*self.op+shakeX, self.y+random.randint(-1,1)*8*self.op+shakeY))
         """
         if random.random()<.1:
             if self.hitboxes:
@@ -313,12 +319,12 @@ class Player():
                 target = random.choice(enemies)
             if random.random()<0.1:
                 self.pressed["d"] = random.randint(0,1)
-            if random.randint(0,20)==0 and target!=self:
+            if random.randint(0,20)==0:
                 self.pressed["w"] = target.y < self.y
 
             attacking=False
             for i in ["1","2","3","4","5"]:
-                self.pressed[i] = (random.randint(0,40)==0) ^ (self.state!=State.idle)
+                self.pressed[i] = (random.randint(0,15+10*int(i))==0) ^ (self.state!=State.idle)
                 if self.pressed[i]:
                     self.pressed["d"] = target.x > self.x
                     if isinstance(self, Alien) and (self.pressed["3"] or self.pressed["4"]):
@@ -541,12 +547,12 @@ class Player():
         if not self.invisible: #character
             image = self.image[self.facingRight]
             gameDisplay.blit(image, (self.x+shakeX, self.y+shakeY))
-        
+        """
         if random.random()<.5: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
-            
+        """
     hurtImage = pygame.image.load(os.path.join(filepath, "textures", "effect.png"))
     hurtImage = pygame.transform.scale(hurtImage, (8*32, 8*32))
     hurtImage = (pygame.transform.flip(hurtImage, True, False), hurtImage)
@@ -1099,10 +1105,23 @@ class Animals(Player):
             self.attackBox = None
 
     def attack5(self, pressed):
-        Player.ultSound.play()
-        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
-        self.image = self.prePunchImage
-        self.state = State.idle
+        if self.attackFrame==1:
+            Player.ultSound.play()
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        if self.attackFrame<10:
+            self.image = self.preUltImage
+        elif self.attackFrame < 90:
+            self.image = self.ultImage
+            if self.attackFrame%3==1:
+                Player.lickSound.stop()
+                Player.lickSound.play()
+                Projectile.projectiles.append(Projectile(self, op=True))
+        elif self.attackFrame<100:
+            self.image = self.preUltImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
 
     idleImage = Player.load("animals", "idle.png")
     stunnedImage = Player.load("animals", "stunned.png")
@@ -1114,6 +1133,9 @@ class Animals(Player):
     preFlyImage = Player.load("animals", "prefly.png")
     flyImage = Player.load("animals", "fly.png")
     fly2Image = Player.load("animals", "fly2.png")
+    ultImage = Player.load("animals", "ult.png")
+    preUltImage = Player.load("animals", "preult.png")
+    projbImage = Player.load("animals", "projb.png")
     text = ""
 
 class Bird(Player):
@@ -1630,10 +1652,13 @@ class Glitch(Player):
             self.attackBox = None
 
     def attack5(self, pressed):
-        Player.ultSound.play()
-        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
-        self.image = self.shimmerImage
-        self.state = State.idle
+        self.attackBox = [14,11,18,16,10,100,0]
+        if self.attackFrame==2:
+            Player.ultSound.play()
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+            self.image = self.shimmerImage
+            self.state = State.idle
+            self.attackBox = None
 
     idleImage = Player.load("glitch", "idle.png")
     stunnedImage = Player.load("glitch", "stunned.png")
@@ -2149,6 +2174,7 @@ class Penguin(Player):
 allClasses = [
 Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
 Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Monster, Penguin,
+Rat,Rat,Rat,Rat,Rat,Glitch,Glitch,Glitch,Glitch,Glitch,Glitch,Glitch,Glitch,Animals,Animals,Animals,Animals,Animals,Animals,Animals,
 ]
 
 def restart():
@@ -2305,7 +2331,7 @@ while State.jump_out == False:
         player.physics()
 
     #draw players
-    for player in Player.players+Projectile.projectiles:
+    for player in Projectile.projectiles+Player.players:
         player.draw()
 
     pygame.display.update()
