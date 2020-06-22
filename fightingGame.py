@@ -307,7 +307,7 @@ class Player():
             if self.hp<=0:
                 Player.players.remove(self)
         if random.random()<0.1:
-            self.ultCharge+=1
+            self.ultCharge+=1 #?
 
     def getPressed(self, pressed):
         if self.random:
@@ -492,6 +492,7 @@ class Player():
         Player.hitLag = damage*0.003
         if stun:
             self.state = State.stunned
+            self.image = self.stunnedImage
             self.attackFrame = 0
             if self.hp<=0:
                 if not (isinstance(self,Tree) and not self.isLastTree()):
@@ -572,35 +573,38 @@ class Puncher(Player):
         self.init2()
 
         self.first = [
-        [6, self.prePunchImage, None, True],
+        [6, self.midPunchImage, None, True],
         [9, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 19]],
         [18, self.punchImage],
-        [25, self.prePunchImage],
+        [25, self.midPunchImage],
         ]
 
         self.second = [
-        [12, self.prePunchImage],
+        [10, self.prePunchImage],
+        [16, self.midPunchImage],
         [19, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 50]],
-        [31, self.punchImage],
-        [51, self.prePunchImage],
+        [34, self.punchImage],
+        [51, self.midPunchImage],
         ]
 
         self.long = [
         [19, self.prePunchImage],
         [90, self.prePunchImage, None, True],
+        [95, self.midPunchImage],
         [100, self.punchImage],
         [109, self.longPunchImage, [32-7, 32-8-6, 32, 32-8, 40]],
         [130, self.longPunchImage],
         [141, self.punchImage],
-        [155, self.prePunchImage],
+        [155, self.midPunchImage],
         ]
 
         self.extreme = [
-        [39, self.prePunchImage],
-        [165, self.prePunchImage, None, True],
+        [36, self.prePunchImage],
+        [162, self.prePunchImage, None, True],
+        [167, self.midPunchImage],
         [170, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 80, 100]],
         [210, self.punchImage],
-        [225, self.prePunchImage],
+        [225, self.midPunchImage],
         ]
 
     def attack3(self, pressed):
@@ -632,6 +636,7 @@ class Puncher(Player):
     stunnedImage = Player.load("puncher", "stunned.png")
     longPunchImage = Player.load("puncher", "longpunch.png")
     prePunchImage = Player.load("puncher", "prepunch.png")
+    midPunchImage = Player.load("puncher", "midpunch.png")
     punchImage = Player.load("puncher", "punch.png")
     text = "Good at punching! smaller than Big."
 class Big(Player):
@@ -681,27 +686,22 @@ class Big(Player):
         #self.executeAttack(self.elbow, not self.pressed["3"])
         
         if self.attackFrame < 20:
-            self.image = self.midPunchImage
+            self.image = self.prePunchImage
             self.attackBox = None
             if self.attackFrame%5==0:
                 self.facingRight = not self.facingRight
 
-        elif self.attackFrame < 40:
-            self.image = self.punchImage
-            self.attackBox = [16, 16, 32-6, 32-8, 20]
-            if self.attackFrame%20==0:
-                self.facingRight = not self.facingRight
-
         elif self.attackFrame < 150:
+            self.yv-=0.8
             self.image = self.punchImage
-            self.attackBox = [16, 16, 32-6, 32-8, 20]
-            if self.attackFrame%20==0:
+            self.attackBox = [16, 16, 32-6, 32-8, 18]
+            if self.attackFrame%10==0:
                 self.facingRight = not self.facingRight
-            if not self.pressed["3"]:
+            if not self.pressed["3"] and self.attackFrame>35:
                 self.attackFrame = 150
 
         elif self.attackFrame < 170:
-            self.image = self.prePunchImage
+            self.image = self.midPunchImage
             self.attackBox = None
             if self.attackFrame%5==0:
                 self.facingRight = not self.facingRight
@@ -953,6 +953,7 @@ class Tree(Player):
     growImage = Player.load("tree", "grow.png")
     preGrowImage = Player.load("tree", "pregrow.png")
     text = "lol waht"
+    #text = "Part of a complex tree complex that evoved rapid growth somehow." idk how trees work
 class Sad(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -964,7 +965,9 @@ class Sad(Player):
         self.init2()
 
         self.first = [
-        [14, self.preSkullImage],
+        [10, self.stunnedImage],
+        [13, self.idleImage],
+        [16, self.preSkullImage],
         [18, self.skullImage, [19, 15, 24, 21, 35]],
         [31, self.skullImage],
         [40, self.preSkullImage],
@@ -1136,7 +1139,7 @@ class Animals(Player):
     ultImage = Player.load("animals", "ult.png")
     preUltImage = Player.load("animals", "preult.png")
     projbImage = Player.load("animals", "projb.png")
-    text = ""
+    text = "The animal is bloody. The snake is fighting. The relationship is questionable. (symbiosis or ?)"
 
 class Bird(Player):
 
@@ -1346,15 +1349,18 @@ class Lizard(Player):
 
         self.first = [
         [6, self.prePunchImage],
+        [9, self.midPunchImage],
         [12, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 10]],
         [17, self.punchImage],
-        [22, self.prePunchImage],
+        [22, self.midPunchImage],
         ]
 
         self.second = [
         [10, self.prePunchImage],
+        [14, self.midPunchImage],
         [18, self.punchImage, [32-9-6, 32-8-5, 32-9, 32-8, 20]],
         [33, self.punchImage],
+        [37, self.midPunchImage],
         [40, self.prePunchImage],
         ]
         self.tail = [
@@ -1391,6 +1397,7 @@ class Lizard(Player):
     idleImage = Player.load("lizard", "idle.png")
     stunnedImage = Player.load("lizard", "stunned.png")
     prePunchImage = Player.load("lizard", "prepunch.png")
+    midPunchImage = Player.load("lizard", "midpunch.png")
     punchImage = Player.load("lizard", "punch.png")
     preTailImage = Player.load("lizard", "prekick.png")
     tailImage = Player.load("lizard", "kick.png")
@@ -2174,7 +2181,6 @@ class Penguin(Player):
 allClasses = [
 Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
 Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Monster, Penguin,
-Rat,Rat,Rat,Rat,Rat,Glitch,Glitch,Glitch,Glitch,Glitch,Glitch,Glitch,Glitch,Animals,Animals,Animals,Animals,Animals,Animals,Animals,
 ]
 
 def restart():
