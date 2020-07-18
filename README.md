@@ -1,7 +1,7 @@
 this is the readme flie.
 welcone!!
 
-it is fightingGame 1.16.0
+it is fightingGame 1.16.1
 
 i made the first 6 characters.
 thepromanager made 7 more.
@@ -26,9 +26,10 @@ Patch 1.16.0 patch notes: (changed so much i has to write it lol)
 Gravity is universally lowered.
 Some characters can double jump.
 Multihits connect now maybe.
+Add a background.
 Stuff is generally cooler.
 
-Puncher gets a cool ult and better V and can doublejump.
+Puncher gets a coool ult and better V and can doublejump.
 Big can fly a bit with V and has better ult.
 Green can doublejump but has less broken nattacks.
 Tree is fine.
@@ -40,7 +41,7 @@ Lizrd is much better at everything and can jump twicee! insane buffs (no baised 
 Golem is better combos but waeker C.
 Alien is more faster beter.
 Glitch walks slow but get cool movement with the attacks and a double jump.
-Monster is fine.
+Monster is stronger and has more parkour and combos.
 Penguin can double jump only while magic is used. and is buffed a bit.
 
 Non-tournament legal:
