@@ -122,7 +122,7 @@ class Projectile():
         if isinstance(self.owner, Monster):
             self.xv = (self.facingRight-0.5) * 8
             self.yv = -0.8
-            self.box = [32-11, 19, 32-7, 22, 11, -44, 0]
+            self.box = [32-11, 19, 32-7, 22, 15, -60, 0]
         if isinstance(self.owner, Penguin):
             self.y-=10
             if self.op:
@@ -477,6 +477,7 @@ class Player():
         else:
             #unindent makes bird wobble here (no?
             self.yv+=0.8
+            #self.yv*=0.99
             #happens all the time?
         
         if not self.onGround and self.doubleJump==1 and not self.pressed["w"]:
@@ -655,19 +656,21 @@ class Puncher(Player):
 
         a=self.attackFrame
 
-        if a%5==3 and a<50:
-            self.xv = (self.facingRight-0.5)
-            self.yv = -1
+        if a<200:
+            if a%7==0:
+                self.xv += (self.facingRight-0.5)*0.5
+                self.yv = -2
+            if a%7<=3:
+                self.image = self.punchImage
+                self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 3,9,7]
+            else:
+                self.image = self.midPunchImage
+                self.attackBox = None
 
-        if a%5<=3 and a<50:
-            self.image = self.punchImage
-            self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 5, -5]
+            if not self.pressed["5"] and self.attackFrame>25:
+                self.attackFrame = 200
 
-        elif a<50: #and a%20>8 btw
-            self.image = self.prePunchImage
-            self.attackBox = None
-
-        elif self.attackFrame < 70:
+        elif self.attackFrame < 210:
             self.image = self.punchImage
             self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 50, 150, 100]
             pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
@@ -1037,7 +1040,7 @@ class Sad(Player):
     def attack3(self, pressed):
         self.executeAttack(self.jump, not self.pressed["2"])
         if self.attackFrame==12:
-            self.yv=-12
+            self.yv=-11
             r=(self.facingRight-0.5)*2
             self.xv=max(self.xv*r,4)*r
     
@@ -2061,7 +2064,7 @@ class Monster(Player):
 
         self.second = [
         [15, self.prePunchImage],
-        [21, self.punchImage, [22, 20, 26, 23, 35, 90, 10]],
+        [21, self.punchImage, [22, 20, 26, 23, 40, 90, 10]],
         [27, self.punchImage],
         [37, self.prePunchImage],
         [43, self.idleImage],
@@ -2076,9 +2079,9 @@ class Monster(Player):
             Projectile.projectiles.append(Projectile(self))
         elif self.attackFrame < 30:
             self.image = self.punchImage
-        elif self.attackFrame < 44:
+        elif self.attackFrame < 43:
             self.image = self.prePunchImage
-        elif self.attackFrame < 48:
+        elif self.attackFrame < 46:
             self.image = self.idleImage
         else:
             self.state = State.idle
@@ -2349,7 +2352,7 @@ def restart():
 
 gameDisplay = pygame.display.set_mode((1000, 600))
 backgrounds = []
-for name in ["background.png","background2.png","background3.png"]:
+for name in ["background.png","background2.png","background3.png","background4.png"]:
     background = pygame.image.load(os.path.join(filepath, "textures", name))
     background = pygame.transform.scale(background, (1000, 600))
     backgrounds.append(background)
