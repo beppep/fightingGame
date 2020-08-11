@@ -9,7 +9,7 @@ filepath=""
 SOUND_PATH = os.path.join(filepath, "sounds")
 
 def initSound():
-    State.volume = 1 #damage can only be heard up to 1/100 of Volume
+    State.volume = 2 #damage can only be heard up to 1/100 of Volume
     v=State.volume
     pygame.font.init() # you have to call this at the start, 
                            # if you want to use this module.
@@ -112,7 +112,7 @@ class Projectile():
             self.x-=self.xv*3
         if isinstance(self.owner, Alien):
             self.xv = (self.facingRight-0.5) * -20
-            self.box = [3, 14, 7, 17, 7,10]
+            self.box = [3, 14, 7, 17, 7,0,20]
             self.x-=self.xv*4
             self.yv = .5
         if isinstance(self.owner, Glitch):
@@ -209,7 +209,7 @@ class Player():
         self.CHARGE = 50
         self.flyingHeight=0
         self.onGround = True
-        self.xspeed=2
+        self.xspeed=2.5
         self.x = x
         self.xv = 0
         self.y = y
@@ -312,8 +312,7 @@ class Player():
             self.stun = 0
             if self.hp<=0:
                 Player.players.remove(self)
-        if random.random()<0.1:
-            self.ultCharge+=1 #?
+        self.ultCharge+=0.1 #?
 
     def getPressed(self, pressed):
         if self.random:
@@ -326,7 +325,7 @@ class Player():
             if random.random()<0.1:
                 self.pressed["d"] = random.randint(0,1)
             if random.randint(0,20)==0:
-                self.pressed["w"] = (target.y < self.y)
+                self.pressed["w"] = (target.y < self.y) ^ (random.random()<0.5)
             if not self.onGround:
                 self.pressed["w"] = random.randint(0,1)
 
@@ -374,7 +373,7 @@ class Player():
 
         if(self.pressed["w"]):
             if (self.onGround):
-                self.yv=-15
+                self.yv=-17
             if self.doubleJump==-1 and self.canDoubleJump:
                 self.yv=-13
                 self.doubleJump=0
@@ -403,9 +402,8 @@ class Player():
                 self.attackFrame = 0
                 self.ultCharge = 0
         
-        if random.random()<0.1:
-            self.ultCharge+=1
-            #print(Player.players.index(self),":",self.ultCharge,"%")
+        self.ultCharge+=0.1
+        #print(Player.players.index(self),":",self.ultCharge,"%")
 
     def physics(self):
 
@@ -477,7 +475,7 @@ class Player():
         else:
             #unindent makes bird wobble here (no?
             self.yv+=0.8
-            #self.yv*=0.99
+            self.yv*=0.99
             #happens all the time?
         
         if not self.onGround and self.doubleJump==1 and not self.pressed["w"]:
@@ -586,7 +584,7 @@ class Player():
             image = self.image[self.facingRight]
             gameDisplay.blit(image, (self.x+shakeX, self.y+shakeY))
         """
-        if random.random()<.5: #yellow
+        if random.random()<.1: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
@@ -629,7 +627,8 @@ class Puncher(Player):
         [19, self.prePunchImage],
         [90, self.prePunchImage, None, True],
         [95, self.midPunchImage],
-        [100, self.punchImage],
+        [100, self.midPunchImage],
+        [100, self.punchImage, [32-9-7, 32-8-6, 32-9, 32-8, 45,50,55]],
         [103, self.longPunchImage, [32-7, 32-8-6, 32, 32-8, 45,50,55]],
         [125, self.longPunchImage],
         [140, self.punchImage],
@@ -664,17 +663,18 @@ class Puncher(Player):
                 self.image = self.punchImage
                 self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 3,9,7]
             else:
-                self.image = self.midPunchImage
+                self.image = self.prePunchImage
                 self.attackBox = None
 
             if not self.pressed["5"] and self.attackFrame>25:
                 self.attackFrame = 200
 
-        elif self.attackFrame < 210:
+        elif self.attackFrame < 208:
             self.image = self.punchImage
-            self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 50, 150, 100]
+            self.attackBox = [32-9-7, 32-8-6, 32-9, 32-8, 3,9,70]
             pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
-
+        elif self.attackFrame < 225:
+            self.image = self.punchImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -697,7 +697,7 @@ class Big(Player):
         super(Big, self).__init__(x, y, facingRight, controls,joystick)
         self.box = [16-4, 12, 16+4, 32-4]
         self.image = Big.idleImage
-        self.xspeed=1.8
+        self.xspeed=2
         self.hp=300
         self.init2()
 
@@ -906,6 +906,7 @@ class Tree(Player):
         self.box = [16-3, 32-15, 16+3, 32-4]
         self.image = Tree.idleImage
         self.CHARGE = 25
+        self.xspeed = 2
         self.code = random.random()
         self.init2()
 
@@ -1007,7 +1008,7 @@ class Tree(Player):
     growImage = Player.load("tree", "grow.png")
     preGrowImage = Player.load("tree", "pregrow.png")
     text = "lol waht"
-    #text = "Part of a complex tree complex that evoved rapid growth somehow." idk how trees work
+    text = "A subspecies of acer platanoides evolved as an r-strategist"
 class Sad(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
@@ -1088,7 +1089,7 @@ class Sad(Player):
     preJumpImage = Player.load("sad", "prejump.png")
     jumpImage = Player.load("sad", "jump.png")
     projbImage = Player.load("sad", "somehorn.png")
-    text = "Magically moves objects. Is depressed. "
+    text = "Solemnity is the key to telekinesis"
 class Animals(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -1109,7 +1110,7 @@ class Animals(Player):
         [15, self.punchImage, [24,21,26,23, 1,0,5]],
         [20, self.punchImage],
         [25, self.punchImage, [24,21,26,23, 3,-60,10]],
-        [34, self.postPunchImage, [22,14,24,16, 9,-35,10]],
+        [34, self.postPunchImage, [22,14,24,16, 9,-35,20]],
         [39, self.prePunchImage],
         ]
 
@@ -1254,17 +1255,14 @@ class Bird(Player):
         elif self.attackFrame == 150:
             Player.bzzzSound.play()
 
-        elif self.attackFrame < 180:
+        elif self.attackFrame < 182:
             self.image = self.elaImage
             self.attackBox = [0, 15, 32, 32-8, 6,5]
             if self.attackFrame%6>3:
                 self.image = self.elbImage
         
-        elif self.attackFrame < 200:
+        elif self.attackFrame < 205:
             self.image = self.preelImage
-            self.attackBox = None
-        elif self.attackFrame < 210:
-            self.image = self.idleImage
             self.attackBox = None
         else:
             self.state = State.idle
@@ -1298,6 +1296,7 @@ class Bird(Player):
     preelImage = Player.load("bird", "preel.png")
     elaImage = Player.load("bird", "ela.png")
     elbImage = Player.load("bird", "elb.png")
+
     text = "The electric avian predator"
 class Robot(Player):
 
@@ -1309,7 +1308,10 @@ class Robot(Player):
             self.image = self.idlebImage
         else:
             self.image = self.idleImage
-        self.yv+=0.1
+        self.yv+=0.15
+        if self.state == State.stunned:
+            self.stun-=0.3
+            self.yv-=0.1
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Robot, self).__init__(x, y, facingRight, controls, joystick)
@@ -1366,7 +1368,7 @@ class Robot(Player):
         elif self.attackFrame == 15:
             self.image = self.jetpackImage
             self.attackBox = None
-            self.yv=-15
+            self.yv=-14
         elif self.attackFrame < 32:
             self.image = self.stunnedImage
         else:
@@ -1412,7 +1414,7 @@ class Lizard(Player):
         super(Lizard, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-17, 16+3, 32-4]
         self.image = Lizard.idleImage
-        self.xspeed = 2.5
+        self.xspeed = 3
         self.CHARGE = 25
         self.init2()
         self.canDoubleJump = True
@@ -1481,19 +1483,20 @@ class Golem(Player):
         self.init2()
 
         self.first = [
-        [5, self.prePunchImage],
-        [8, self.punchImage, [18, 23, 22, 27, 10, 8, 11]],
-        [14, self.punchImage],
-        [18, self.punchImage, [21, 17, 24, 22, 10, 20, 10]],
-        [26, self.prePunchImage],
+        [7, self.prePunchImage],
+        [10, self.punchImage, [21, 18, 25, 22, 15]],
+        [17, self.punchImage],
+        [23, self.prePunchImage],
         ]
 
         self.second = [
-        [10, self.prePunchImage],
-        [15, self.punchImage, [18, 23, 22, 27, 8, -40, 17]],
+        [11, self.prePunchImage],
+        [15, self.kickImage, [17, 23, 23, 27, 8, -45, 17]],
+        [22, self.kickImage],
         [28, self.prePunchImage],
-        [35, self.punchImage, [21, 17, 24, 22, 8, -60, 20]],
-        [43, self.prePunchImage],
+        [35, self.punchImage, [21, 18, 25, 22, 8, -60, 22]],
+        [39, self.punchImage],
+        [42, self.prePunchImage],
         ]
 
         self.lick = [
@@ -1541,6 +1544,7 @@ class Golem(Player):
     fireImage = Player.load("golem", "fire.png")
     prePunchImage = Player.load("golem", "prepunch.png")
     punchImage = Player.load("golem", "punch.png")
+    kickImage = Player.load("golem", "kick.png")
     preGrassImage = Player.load("golem", "pregrass.png")
     grassImage = Player.load("golem", "grass.png")
     preLickImage = Player.load("golem", "prelick.png")
@@ -1561,32 +1565,31 @@ class Alien(Player):
 
         self.first = [
         [9, self.prePunchImage],
-        [14, self.punchImage, [17, 19, 23, 23, 5,-7]],
+        [14, self.punchImage, [17, 19, 23, 23, 5,-11]],
         [17, self.punchImage],
         [21, self.prePunchImage],
-        [31, self.punchImage, [17, 19, 23, 23, 12]],
+        [31, self.punchImage, [17, 19, 23, 23, 13]],
         [36, self.prePunchImage],
         ]
 
         self.second = [
         [20, self.prePunchImage],
-        [25, self.punchImage, [17, 19, 23, 23, 25,-7, 33]],
+        [23, self.punchImage, [17, 19, 23, 23, 25,-7, 33]],
         [27, self.punchImage],
         [40, self.prePunchImage],
         ]
 
         self.ultimate = [
-        [5, self.idleImage],
-        [10, self.footImage,[19, 23, 23, 28, 5,-35,5]],
-        [20, self.armImage, [19, 17, 24, 20, 1, -30,10]],
-        [24, self.rise1Image, [19, 17, 24, 20, 1, -28,4]],
-        [28, self.rise2Image, [19, 15, 24, 18, 2, -22,4]],
-        [32, self.rise3Image, [19, 13, 24, 16, 5, -15,4]],
-        [36, self.rise4Image, [19, 11, 24, 14, 10, 0,4]],
-        [40, self.rise3Image, [19, 13, 24, 16, 5, 0,4]],
-        [44, self.rise2Image, [19, 15, 24, 18, 2, 0,4]],
-        [48, self.rise1Image, [19, 17, 24, 20, 10, 60]],
-        [60, self.idleImage]
+        [5, self.footImage,[19, 23, 23, 28, 5,-25,10]],
+        [15, self.armImage, [19, 17, 24, 20, 1, -22,5]],
+        [19, self.rise1Image, [19, 17, 24, 20, 1, -22,4]],
+        [23, self.rise2Image, [19, 15, 24, 18, 2, -15,4]],
+        [27, self.rise3Image, [19, 13, 24, 16, 5, -15,4]],
+        [31, self.rise4Image, [19, 11, 24, 14, 10, 0,4]],
+        [35, self.rise3Image, [19, 13, 24, 16, 5, 0,4]],
+        [39, self.rise2Image, [19, 15, 24, 18, 2, 0,4]],
+        [44, self.rise1Image, [19, 17, 24, 20, 10, 60]],
+        [56, self.idleImage]
         ]
 
     def attack3(self, pressed):
@@ -1690,7 +1693,7 @@ class Glitch(Player):
 
         else:
             self.box = [13, 15, 19, 28]
-            self.xspeed = 1.8
+            self.xspeed = 2
             self.flyingHeight=0
     def attack1(self, pressed):
         if(self.image==self.shimmerImage):
@@ -1772,7 +1775,7 @@ class Rat(Player):
         super(Rat, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [14, 17, 18, 28]
         self.hp = 200
-        self.xspeed=1.8
+        self.xspeed=2
 
         self.image = self.idleImage
         self.init2()
@@ -2271,7 +2274,7 @@ class Penguin(Player):
     idleImage = ninjaImage #selesctscreen
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
+#Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
 Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
 ]
 
