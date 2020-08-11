@@ -1896,7 +1896,7 @@ class Can(Player):
         elif self.attackFrame<100:
             self.image = self.waterImage
             self.attackBox = [13,31,16,32, 1, 0, 0]
-            self.yv-=1
+            self.yv-=0.9
             self.yv=self.yv*0.95
             self.facingRight = not self.facingRight
             if not (self.pressed["3"] or self.pressed["4"]):
@@ -1904,7 +1904,7 @@ class Can(Player):
         elif self.attackFrame<109:
             self.image = self.idleImage
             self.facingRight = not self.facingRight
-            self.yv=self.yv*0.95
+            #self.yv=self.yv*0.95
             self.attackBox = None
         else:
             self.state = State.idle
@@ -1944,15 +1944,15 @@ class Frog(Player):
         self.init2()
 
         self.first = [
-        [1, self.preLickImage],
-        [2, self.lickImage, [26, 18, 28, 21, 15, 25]],
-        [3, self.lickImage],
-        [4, self.preLickImage],
+        [9, self.preLickImage],
+        [12, self.lickImage, [26, 18, 28, 21, 15, -21]],
+        [18, self.lickImage],
+        [38, self.preLickImage],
         ]
 
         self.second = [
         [9, self.preLickImage],
-        [12, self.lickImage, [26, 18, 28, 21, 15, -100]],
+        [12, self.lickImage, [26, 18, 28, 21, 15, -21]],
         [18, self.lickImage],
         [38, self.preLickImage],
         ]
@@ -1964,16 +1964,13 @@ class Frog(Player):
         self.executeAttack(self.second, not self.pressed["2"])
         if self.attackFrame==1:
             Player.lickSound.play()
-        if self.attackFrame==10:
-            self.xv-=(self.facingRight-0.5)*20
-            self.yv-=8
 
     def attack3(self, pressed):
         if self.attackFrame < 15:
             self.image = self.stunnedImage
             self.attackBox = None        
         elif self.attackFrame == 15: 
-            self.image = self.preLickImage
+            self.image = self.jumpImage
             self.xv += (self.facingRight-0.5)*8
             self.yv -= 16
         elif self.attackFrame < 500:
@@ -1996,7 +1993,7 @@ class Frog(Player):
             self.image = self.stunnedImage
             self.attackBox = None        
         elif self.attackFrame == 30: 
-            self.image = self.preLickImage
+            self.image = self.jumpImage
             self.xv += (self.facingRight-0.5)*12
             self.yv -=24
         elif self.attackFrame < 500:
@@ -2274,7 +2271,8 @@ class Penguin(Player):
     idleImage = ninjaImage #selesctscreen
 
 allClasses = [
-#Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
 Puncher, Big, Green, Tree, Sad, Animals, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
 ]
 
