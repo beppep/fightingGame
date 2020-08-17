@@ -108,7 +108,7 @@ class Projectile():
             self.x-=self.xv*2
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
-            self.box = [32-8, 16, 32-4, 19, 10+0*self.op, 10]
+            self.box = [32-8, 16, 32-4, 19, 12+3*self.op, 12]
             self.x-=self.xv*3
         if isinstance(self.owner, Alien):
             self.xv = (self.facingRight-0.5) * -20
@@ -121,7 +121,7 @@ class Projectile():
             self.x-=self.xv*2
         if isinstance(self.owner, Monster):
             self.xv = (self.facingRight-0.5) * 8
-            self.yv = -0.8
+            self.yv = -0.7
             self.box = [32-11, 19, 32-7, 22, 15, -60, 0]
         if isinstance(self.owner, Penguin):
             self.y-=10
@@ -409,13 +409,13 @@ class Player():
 
         self.x+=self.xv
         self.hurtboxes = self.generateBox(self.box)
-        self.hurtboxes[3]+=self.flyingHeight
+        #self.hurtboxes[3]+=self.flyingHeight
         self.hurtboxes[0]+=8
         self.hurtboxes[2]-=8
 
         for player in Player.players+Platform.platforms:
             otherbox=player.hurtboxes[:]
-            otherbox[3]+=player.flyingHeight
+            #otherbox[3]+=player.flyingHeight
             if self.collide(otherbox) and not player==self:
                 if self.xv==0:
                     pass
@@ -428,14 +428,14 @@ class Player():
                 self.xv = 0
         if self.hurtboxes[2]>904:
             self.x += 904-self.hurtboxes[2]
-            if self.stun: #bouncy walls
+            if self.stun and not isinstance(self,Golem): #bouncy walls
                 self.xv=-self.xv*0.5
                 self.yv=-abs(self.xv)
             else:
                 self.xv=0
         if self.hurtboxes[0]<96:
             self.x += 96-self.hurtboxes[0]
-            if self.stun:
+            if self.stun and not isinstance(self,Golem):
                 self.xv=-self.xv*0.5
                 self.yv=-abs(self.xv)
             else:
@@ -443,14 +443,14 @@ class Player():
 
         self.y+=self.yv
         self.hurtboxes = self.generateBox(self.box)
-        self.hurtboxes[3]+=self.flyingHeight
+        #self.hurtboxes[3]+=self.flyingHeight
         self.hurtboxes[0]+=8
         self.hurtboxes[2]-=8
 
         self.onGround=False
         for player in Player.players+Platform.platforms:
             otherbox=player.hurtboxes[:]
-            otherbox[3]+=player.flyingHeight
+            #otherbox[3]+=player.flyingHeight
             if self.collide(otherbox) and not player==self:
                 if self.yv<=0:
                     self.y+=otherbox[3]-self.hurtboxes[1]
@@ -465,8 +465,8 @@ class Player():
                     self.onGround=True
                     self.doubleJump=True
 
-        if self.hurtboxes[3]>504:
-            self.y+=504-self.hurtboxes[3]
+        if self.hurtboxes[3]+self.flyingHeight>504:
+            self.y+=504-self.hurtboxes[3]-self.flyingHeight
             self.grounded()
             self.yv=0.8
             self.xv=self.xv*0.5
@@ -744,7 +744,7 @@ class Big(Player):
                 self.facingRight = not self.facingRight
 
         elif self.attackFrame < 150:
-            self.yv-=0.7
+            self.yv-=0.76
             self.image = self.punchImage
             self.attackBox = [16, 16, 32-6, 32-8, 18]
             if self.attackFrame%10==0:
@@ -926,48 +926,73 @@ class Tree(Player):
 
     def attack3(self, pressed):
         if self.attackFrame == 1:
-            Player.growSound.play()
+            if not self.y==280:
+                self.state = State.idle
+            else:
+                Player.growSound.play()
         elif self.attackFrame < 10:
             self.image = self.preGrowImage
+            self.box = [16-3, 32-12, 16+3, 32-4]
         elif self.attackFrame < 17:
             self.image = self.growImage
+            self.box = [16-3, 32-8, 16+3, 32-4]
             self.invincible=True
-        elif self.attackFrame < 20:
+        elif self.attackFrame==17:
+            self.box = [16-3, 32-4, 16+3, 32-4]
             self.invisible=True
-        elif self.attackFrame==20:
             self.x += 250*(self.facingRight-0.5)
-            Player.growSound.play()
+            #Player.growSound.play()
             self.facingRight = not self.facingRight
-        elif self.attackFrame < 35:
+        elif self.attackFrame<27:
+            pass
+        elif self.attackFrame < 37:
             self.invisible=False
-        elif self.attackFrame < 50:
+            self.attackBox = [16-2, 32-8, 16+2, 32-4,20,60,20]
+        elif self.attackFrame < 47:
+            self.attackBox = [16-2, 32-12, 16+2, 32-4,15,50,15]
+            self.box = [16-3, 32-8, 16+3, 32-4]
             self.invincible=False
             self.image = self.preGrowImage
-        else:
-            self.state = State.idle
+        elif self.attackFrame < 57:
+            self.box = [16-3, 32-12, 16+3, 32-4]
+            self.attackBox = [16-2, 32-15, 16+2, 32-4,10,40,10]
             self.image = self.idleImage
+        else:
+            self.box = [16-3, 32-15, 16+3, 32-4]
+            self.state = State.idle
             self.attackBox = None
 
     def attack4(self, pressed):
         if self.attackFrame == 1:
-            Player.growSound.play()
+            if not self.y==280:
+                self.state = State.idle
+            else:
+                Player.growSound.play()
         elif self.attackFrame < 10:
             self.image = self.preGrowImage
+            self.box = [16-3, 32-12, 16+3, 32-4]
         elif self.attackFrame < 17:
             self.image = self.growImage
             self.invincible=True
-        elif self.attackFrame < 30:
+            self.box = [16-3, 32-8, 16+3, 32-4]
+        elif self.attackFrame < 32:
             self.invisible=True
-        elif self.attackFrame==30:
-            Player.growSound.play()
-        elif self.attackFrame < 40:
+            self.box = [16-3, 32-4, 16+3, 32-4]
+        elif self.attackFrame < 44:
             self.invisible = False
-        elif self.attackFrame < 50:
+            self.attackBox = [16-2, 32-8, 16+2, 32-4,20,60,20]
+        elif self.attackFrame < 56:
             self.invincible=False
             self.image = self.preGrowImage
-        else:
-            self.state = State.idle
+            self.attackBox = [16-2, 32-12, 16+2, 32-4,15,50,15]
+            self.box = [16-3, 32-8, 16+3, 32-4]
+        elif self.attackFrame < 68:
+            self.attackBox = [16-2, 32-15, 16+2, 32-4,10,40,10]
+            self.box = [16-3, 32-12, 16+3, 32-4]
             self.image = self.idleImage
+        else:
+            self.box = [16-3, 32-15, 16+3, 32-4]
+            self.state = State.idle
             self.attackBox = None
 
     def attack5(self, pressed):
@@ -990,13 +1015,24 @@ class Tree(Player):
 
             self.state = State.idle
 
+        elif self.attackFrame < 10:
+            self.invisible = True
+            self.attackBox = [16-2, 32-8, 16+2, 32-4,20,60,20]
+            self.box = [16-3, 32-4, 16+3, 32-4]
+            self.y=700
         elif self.attackFrame < 20:
+            self.invisible = False
             self.invincible=True
             self.image = self.growImage
+            self.attackBox = [16-2, 32-12, 16+2, 32-4,15,50,15]
+            self.box = [16-3, 32-8, 16+3, 32-4]
         elif self.attackFrame < 50:
             self.invincible=False
             self.image = self.preGrowImage
+            self.attackBox = [16-2, 32-15, 16+2, 32-4,10,40,10]
+            self.box = [16-3, 32-12, 16+3, 32-4]
         else:
+            self.box = [16-3, 32-15, 16+3, 32-4]
             self.state = State.idle
             self.image = self.idleImage
             self.attackBox = None
@@ -1013,9 +1049,9 @@ class Sad(Player):
 
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Sad, self).__init__(x, y, facingRight, controls, joystick)
-        self.box = [16-3, 32-17, 16+3, 32-7]
+        self.box = [16-3, 32-17, 16+3, 32-6]
         self.image = Sad.idleImage
-        self.flyingHeight=3*Player.SCALE
+        self.flyingHeight=2*Player.SCALE
         self.xspeed = 2
         self.init2()
 
@@ -1102,7 +1138,7 @@ class Animals(Player):
         [5, self.prePunchImage],
         [10, self.punchImage, [24,21,26,23, 10]],
         [15, self.punchImage],
-        [25, self.prePunchImage],
+        [20, self.prePunchImage],
         ]
 
         self.second = [
@@ -1257,8 +1293,9 @@ class Bird(Player):
 
         elif self.attackFrame < 182:
             self.image = self.elaImage
-            self.attackBox = [0, 15, 32, 32-8, 6,5]
-            if self.attackFrame%6>3:
+            self.attackBox = [0, 15, 9, 15+9, 7,6]
+            if self.attackFrame%6>2:
+                self.attackBox = [23, 15, 23+9, 21, 7,6]
                 self.image = self.elbImage
         
         elif self.attackFrame < 205:
@@ -1320,10 +1357,11 @@ class Robot(Player):
         self.init2()
 
         self.first = [
-        [30, self.stunnedImage,None],
+        [5, self.idleImage],
+        [30, self.stunnedImage],
         [38, self.fireImage, [20, 32-17, 24, 32-12, 48, 58]],
-        [45, self.fireImage, None],
-        [60, self.stunnedImage, None],
+        [45, self.fireImage],
+        [60, self.stunnedImage],
         ]
 
         self.second = [
