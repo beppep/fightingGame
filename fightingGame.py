@@ -110,7 +110,7 @@ class Projectile():
         self.xv=0
         if isinstance(self.owner, Green):
             self.xv = (self.facingRight-0.5) * (10+10*self.op)
-            self.box = [32-11, 18, 32-6, 32-9, 20+40*op]
+            self.box = [32-11, 18, 32-6, 32-9, 20+40*op, 20+40*op, 20+self.owner.attackFrame*op]
             self.x-=self.xv*2
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
@@ -392,12 +392,12 @@ class Player():
 
         if(self.pressed["w"]):
             if (self.onGround):
-                self.yv=-17
+                self.yv=-17.1
             if self.doubleJump==-1 and self.canDoubleJump:
-                self.yv=-13
+                self.yv=-13.6
                 self.doubleJump=0
                 theImage = Player.hurtImage2[not self.facingRight]
-                gameDisplay.blit(theImage, (self.x, self.y+40))
+                gameDisplay.blit(theImage, (int(self.x), int(self.y)+40))
 
         if(self.pressed["1"]):
             self.state = 1
@@ -479,7 +479,7 @@ class Player():
                 elif self.yv>=0:
                     self.y+=otherbox[1]-self.hurtboxes[3]
                     self.grounded()
-                    self.yv=0.8
+                    self.yv=0.33
                     self.xv=self.xv*0.5
                     self.onGround=True
                     self.doubleJump=True
@@ -487,7 +487,7 @@ class Player():
         if self.hurtboxes[3]+self.flyingHeight>504:
             self.y+=504-self.hurtboxes[3]-self.flyingHeight
             self.grounded()
-            self.yv=0.8
+            self.yv=0.33
             self.xv=self.xv*0.5
             self.onGround=True
             self.doubleJump = True
@@ -888,18 +888,18 @@ class Green(Player):
 
     def attack5(self, pressed):
 
-        if self.attackFrame < 20:
+        if self.attackFrame < 10:
             self.image = self.stunnedImage
             self.attackBox = None
-        elif self.attackFrame < 25:
-            self.image = self.idleImage
-        elif self.attackFrame < 33: 
+        elif self.attackFrame < 15:
             self.image = self.skullImage
-        elif self.attackFrame == 33:
+        elif self.attackFrame == 33 or self.attackFrame==15:
             self.image = self.skullImage
             Projectile.projectiles.append(Projectile(self, op=True))
             Player.ultSound.play()
             pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        elif self.attackFrame < 33:
+            self.image = self.stunnedImage
         elif self.attackFrame < 60:
             self.image = self.skullImage
         else:
@@ -930,7 +930,7 @@ class Tree(Player):
                     return False
         return True
 
-    def hurt(self, player, damage, knockback=0, stun=0):
+    def hurt(self, player, damage, knockback=None, stun=None):
         self.box = [16-3, 32-15, 16+3, 32-4]
         super().hurt(player, damage, knockback, stun)
 
@@ -1285,18 +1285,21 @@ class Pufferfish(Player):
             self.hp=min(self.hp+damage//2, self.maxhp)
 
     def passive(self):
+        if self.pressed["5"] and self.ultCharge>self.CHARGE:
+            Pillar(self.x,-300,True,{"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+            self.ultCharge = 0
         if self.image == self.longImage:
-            self.yv-=0.8
-            self.yv*=0.97
+            self.yv-=0.79
+            self.yv*=0.95
         elif self.image == self.preImage:
-            self.yv-=0.5
-            self.yv*=0.95
-        elif self.image == self.longPunchImage:
-            self.yv-=0.8
+            self.yv-=0.51
             self.yv*=0.97
-        elif self.image == self.punchImage or self.image == self.prePunchImage:
-            self.yv-=0.5
+        elif self.image == self.longPunchImage:
+            self.yv-=0.79
             self.yv*=0.95
+        elif self.image == self.punchImage or self.image == self.prePunchImage:
+            self.yv-=0.51
+            self.yv*=0.97
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Pufferfish, self).__init__(x, y, facingRight, controls, joystick)
@@ -1348,6 +1351,12 @@ class Pufferfish(Player):
 
     def attack4(self, pressed):
         self.executeAttack(self.ball, not self.pressed["4"])
+        if(self.pressed["d"]):
+            self.xv=min(self.xspeed*2, self.xv+0.1)
+            self.facingRight = True
+        if(self.pressed["a"]):
+            self.xv=max(-self.xspeed*2, self.xv-0.1)
+            self.facingRight = False
 
     def attack5(self, pressed):
         Pillar(self.x,-300,True,{"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
