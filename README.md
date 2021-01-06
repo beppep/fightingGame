@@ -19,4 +19,5 @@ its avery good game.(gg)
 
 
 
-Official steam release! Compiled version https://itch.io/game/summary/830980
+Official steam release! Compiled version! 
+https://ynjoscobi2.itch.io/fighting-game
