@@ -21,3 +21,4 @@ its avery good game.(gg)
 
 Official steam release! Compiled version! 
 https://ynjoscobi2.itch.io/fighting-game
+(actually worse)
