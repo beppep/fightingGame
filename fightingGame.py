@@ -416,7 +416,7 @@ class Player():
             self.attackFrame = 0
         
         if(self.pressed["5"] and self.ultCharge>self.CHARGE):
-            if not isinstance(self,Lizard) and not (isinstance(self,Penguin) and not self.wizard):
+            if not isinstance(self,Lizard) and not isinstance(self, Monster) and not (isinstance(self,Penguin) and not self.wizard):
                 self.state = 5
                 self.attackFrame = 0
                 self.ultCharge = 0
@@ -479,7 +479,7 @@ class Player():
                 elif self.yv>=0:
                     self.y+=otherbox[1]-self.hurtboxes[3]
                     self.grounded()
-                    self.yv=0.33
+                    self.yv=0.32
                     self.xv=self.xv*0.5
                     self.onGround=True
                     self.doubleJump=True
@@ -1376,10 +1376,18 @@ class Pufferfish(Player):
 
 class Bird(Player):
 
+    def confirmedHit(self, damage):
+        if self.state==3:
+            self.ultCharge+=1
+        
     def passive(self):
         if(self.pressed["5"] and self.ultCharge>self.CHARGE): #ult
             self.ultCharge = 0
             self.yv=-22
+            self.xv=(self.facingRight-0.5)*10
+            self.state = State.idle
+            self.stun = 0
+            self.attackBox =None
             Player.ultSound.play()
             pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         self.yv-=0.1
@@ -1389,7 +1397,7 @@ class Bird(Player):
         else:
             self.image = self.idleImage
 
-        if self.pressed["w"] and self.yv>=0: #float
+        if self.pressed["w"] and (self.yv>=0 or self.yv<-18): #float
             self.yv=2
             self.image = self.idleImage
 
@@ -1398,6 +1406,7 @@ class Bird(Player):
         self.box = [16-3, 32-18, 16+3, 32-10]
         self.flyingHeight=4*Player.SCALE
         self.image = Bird.idleImage
+        self.CHARGE = 5
         self.maxhp = 200
         self.xspeed = 2.5
         self.init2()
@@ -2221,6 +2230,14 @@ class Frog(Player):
     text = "bad i didnt make this"
 class Monster(Player):
 
+    def passive(self):
+        if(self.pressed["5"] and self.ultCharge>1 and not self.stun and self.state==State.idle): #needed both?
+            self.ultCharge = min(self.ultCharge, self.CHARGE)
+            self.state = 5
+            Player.ultSound.play()
+            Player.growSound.play()
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Monster, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-5, 16, 16+5, 32-4]
@@ -2278,17 +2295,14 @@ class Monster(Player):
         self.executeAttack(self.tail, not self.pressed["4"])
 
     def attack5(self, pressed):
-        if self.attackFrame==1:
-            Player.ultSound.play()
-            Player.growSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
-        if self.attackFrame < 217:
-
+        if self.ultCharge >=0:
+            self.ultCharge-=0.2
             self.yv-=0.4
             self.image = self.prePunchImage
             self.hp=min(self.hp+0.5, self.maxhp)
             self.facingRight = not self.facingRight
         else:
+            self.ultCharge = 0
             self.state = State.idle
             self.image = self.idleImage
 
