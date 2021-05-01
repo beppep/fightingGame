@@ -1406,7 +1406,7 @@ class Bird(Player):
         self.box = [16-3, 32-18, 16+3, 32-10]
         self.flyingHeight=4*Player.SCALE
         self.image = Bird.idleImage
-        self.CHARGE = 5
+        self.CHARGE = 25
         self.maxhp = 200
         self.xspeed = 2.5
         self.init2()
