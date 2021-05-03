@@ -1897,8 +1897,12 @@ class Glitch(Player):
             self.image = self.prePunchImage
         elif self.attackFrame < 16: 
             self.image = self.punchImage
+            if self.attackFrame==13:
+                self.xv+=(self.facingRight-0.5)*10
+            self.attackBox = [15, 19, 22, 22, 18,36,18]
         elif self.attackFrame < 20: 
             self.image = self.preFire1Image
+            self.attackBox = None
         elif self.attackFrame < 28: 
             self.image = self.preFire2Image
         elif self.attackFrame < 36: 
@@ -1912,7 +1916,7 @@ class Glitch(Player):
             Projectile.projectiles.append(Projectile(self))
             playHitSound(State.volume*0.4)
             Player.shake+=10
-            self.xv-=(self.facingRight-0.5)*4
+            self.xv-=(self.facingRight-0.5)*10
         elif self.attackFrame < 55:
             self.image = self.prePunchImage
         else:
@@ -2366,7 +2370,7 @@ class Penguin(Player):
         self.wizardFirst = [
         [10, self.preMagicImage],
         [14, self.midMagicImage],
-        [72, self.magicImage, [23,17,24+6,17+6, 10,20,10], True],
+        [70, self.magicImage, [23,17,24+6,17+6, 10,20,10], True],
         [78, self.magicImage],
         [85, self.midMagicImage],
         [95,self.preMagicImage],
@@ -2404,25 +2408,28 @@ class Penguin(Player):
             self.attackBox = None
 
     def throw(self,pressed):
-        if self.attackFrame < 18:
+        if self.attackFrame < 10:
             self.image = self.preHatImage
             self.attackBox = None
-        elif self.attackFrame < 28: 
+        elif self.attackFrame < 22: 
             self.image = self.midHatImage
-        elif self.attackFrame == 28:
-            self.wizard = not self.wizard
+        elif self.attackFrame == 22:
+            self.wizard = False
             self.image = self.midHatImage
             Projectile.projectiles.append(Projectile(self))
-            self.attackFrame=70 #to 100
+            self.attackFrame=80 #to 100
         #attack3 becomes shuriken.
         #i could have made a becomeWizard func. this works tho. dont question
 
     def attack4(self, pressed):
+        self.ultCharge+=0.1
         if self.attackFrame < 12:
             self.image = self.preHatImage
         elif self.attackFrame == 12:
+            self.attackBox = [9,15,14,19, 10]
             self.wizard = not self.wizard
         elif self.attackFrame < 15+6*self.wizard:
+            self.attackBox = None
             self.image = self.idleImage
         else:
             self.state = State.idle
@@ -2594,7 +2601,7 @@ def restart():
     pygame.quit()
     quit()
 
-gameDisplay = pygame.display.set_mode((1000, 600))
+gameDisplay = pygame.display.set_mode((1000, 600), pygame.FULLSCREEN)
 backgrounds = []
 for name in ["LDbackground.png","LDbackground2.png","background4.png"]:
     background = pygame.image.load(os.path.join(filepath, "textures", name))
