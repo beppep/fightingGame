@@ -4,11 +4,11 @@ import random
 import os
 clock = pygame.time.Clock()
 filepath=""
-
+#Adam "jag tycker ändå det kan funka med ett cirkelargument."
 SOUND_PATH = os.path.join(filepath, "sounds")
 
 def initSound():
-    State.volume = 2 #damage can only be heard up to 100*volume
+    State.volume = 0.2 #damage can only be heard up to 100*volume
     v=State.volume
     pygame.font.init() # you have to call this at the start, 
                            # if you want to use this module.
@@ -545,8 +545,9 @@ class Player():
             endEffect()
             Player.players.remove(self)
         self.stun = max(self.stun, abs(stun))
-        self.yv=-abs(knockback*0.2)
-        self.xv=knockback*(self.facingRight-0.5)*-0.2
+        if knockback:
+            self.yv=-abs(knockback*0.2)
+            self.xv=knockback*(self.facingRight-0.5)*-0.2
         #effects
         Player.shake+=int(damage)
         if damage>10+random.random()*40:
@@ -607,7 +608,7 @@ class Player():
             image = self.image[self.facingRight]
             gameDisplay.blit(image, (int(self.x+shakeX), int(self.y+shakeY)))
         """
-        if random.random()<.1: #yellow
+        if random.random()<0.9: #yellow
             if self.hitboxes:
                 pygame.draw.rect(gameDisplay, (255, 255, 0), \
                 (self.hitboxes[0]+shakeX,self.hitboxes[1]+shakeY,self.hitboxes[2]-self.hitboxes[0],self.hitboxes[3]-self.hitboxes[1]), 0)
@@ -703,6 +704,7 @@ class Puncher(Player):
             pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
         elif self.attackFrame < 225:
             self.image = self.punchImage
+            self.attackBox = None
         else:
             self.state = State.idle
             self.image = self.cursedImage
@@ -1397,7 +1399,7 @@ class Bird(Player):
         else:
             self.image = self.idleImage
 
-        if self.pressed["w"] and (self.yv>=0 or self.yv<-18): #float
+        if self.pressed["w"] and (self.yv>=0 or (self.yv<-18 and not self.stun)): #float
             self.yv=2
             self.image = self.idleImage
 
@@ -2053,6 +2055,117 @@ class Rat(Player):
     tailImage = Player.load("rat", "tail.png")
 
     text = "Technically a mouse"
+class Skugg(Player):
+
+    def passive(self):
+        if self.state == State.idle:
+            if not self.onGround:
+                self.image = self.idleImage
+            elif self.pressed["d"] or self.pressed["a"]:
+                self.image = self.walkImages[(self.attackFrame//4)%8]
+            else:
+                self.image = self.idleImage
+    def grounded(self):
+        Player.shake+=int(self.yv)
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super(Skugg, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [4, 12, 28, 32]
+        self.maxhp = 300
+        self.xspeed=2
+
+        self.image = self.idleImage
+        self.init2()
+
+        self.first = [
+        [5, self.kickImages[0]],
+        [10, self.kickImages[1]],
+        [15, self.kickImages[2]],
+        [20, self.kickImages[3]],
+        [30, self.kickImages[4], [22, 22, 32, 28, 8, -20, 11]],
+        [40, self.kickImages[5], [22, 21, 30, 28, 8, 20, 10]],
+        [50, self.kickImages[6], [22, 20, 32, 28, 30, -120, 30]],
+        [54, self.kickImages[7]],
+        [58, self.kickImages[8]],
+        [62, self.kickImages[9]],
+        [66, self.kickImages[10]],
+        ]
+
+        self.second = [
+        [5, self.skullImages[0]],
+        [10, self.skullImages[1]],
+        [15, self.skullImages[2]],
+        [20, self.skullImages[3]],
+        [30, self.skullImages[4], [24, 8, 32, 20, 57, 57, 48]],
+        [35, self.skullImages[3]],
+        [40, self.skullImages[2]],
+        [45, self.skullImages[1]],
+        [50, self.skullImages[0]],
+        ]
+
+        self.jump = [
+        [4, self.jumpImages[0]],
+        [8, self.jumpImages[1]],
+        [12, self.jumpImages[2]],
+        [16, self.jumpImages[3]],
+        [20, self.jumpImages[4], [21, 4, 31, 8, 48]],
+        [23, self.jumpImages[5], [21, 1, 31, 8, 52]],
+        [26, self.jumpImages[5], [2, 3, 4, 6, 50,-50, 35]],
+        [30, self.jumpImages[4]],
+        [34, self.jumpImages[1]],
+        [38, self.jumpImages[0]],
+        ]
+
+    def attack3(self, pressed):
+        if self.attackFrame==1:
+            Player.bzzzSound.play()
+        if self.attackFrame<5:
+            self.image = self.idleImage
+        elif self.pressed["3"] or self.attackFrame<30:
+            self.image = self.elImages[(self.attackFrame//3)%4]
+            if self.attackFrame%12>5:
+                self.attackBox = [1, 1, 9, 8, 10,-50,17]
+                #nästan ingenting är teoretiskt omöjligt
+            else:
+                self.attackBox = [19, 8, 30, 13, 13]
+        else:
+            self.bzzzSound.stop()
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack4(self, pressed):
+        self.executeAttack(self.jump, not self.pressed["4"])
+        if self.attackFrame==19:
+            self.yv=-11.1
+
+    def attack5(self, pressed):
+        if self.attackFrame == 1:
+            Player.ultSound.play()
+            Player.growSound.play()
+        pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        if self.attackFrame == 5*8:
+            self.invincible=1
+        if self.attackFrame < 5*17:
+            self.image = self.ultImages[self.attackFrame//5]
+        else:
+            if self in Player.players:
+                Player.players.remove(self)
+            candidates = [Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin]
+            new = random.choice(candidates)(self.x, self.y, self.facingRight, self.controls, self.joystick)
+            new.hp = min(new.maxhp, self.hp)
+            new.random = self.random
+
+    idleImage = Player.load("skugg", "idle.png")
+    walkImages = [Player.load("skugg", "SkuggVarg_0"+str(i)+".png") for i in range(2,10)]
+    elImages = [Player.load("skugg", "SkuggVarg_"+str(i)+".png") for i in range(11,15)]
+    jumpImages = [Player.load("skugg", "SkuggVarg_"+str(i)+".png") for i in range(19,25)]
+    kickImages = [Player.load("skugg", "SkuggVarg_"+str(i)+".png") for i in range(26,37)]
+    skullImages = [Player.load("skugg", "SkuggVarg_"+str(i)+".png") for i in range(38,43)]
+    ultImages = [Player.load("skugg", "SkuggVarg_"+str(i)+".png") for i in range(44,61)]
+    stunnedImage = Player.load("skugg", "SkuggVarg_16.png")
+
+    text = "Simultaneous wolf or elk silhouette?"
 
 class Can(Player):
 
@@ -2517,9 +2630,9 @@ class Pillar(Player):
     idleImage = Player.load("pufferfish", "pillar.png")
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Skugg, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Skugg, Rat, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Skugg, Monster, Penguin,
 ]
 
 def restart():
@@ -2528,7 +2641,8 @@ def restart():
     num = 0
     myfont = pygame.font.SysFont('Times New', 100)
     myfont2 = pygame.font.SysFont('Times New Roman', 20)
-    while State.jump_out == False:
+    pressed = pygame.key.get_pressed()
+    while State.jump_out == False and not pressed[pygame.K_q]:
         #pygame.event.get()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -2601,7 +2715,7 @@ def restart():
     pygame.quit()
     quit()
 
-gameDisplay = pygame.display.set_mode((1000, 600), pygame.FULLSCREEN)
+gameDisplay = pygame.display.set_mode((1000, 600),)# pygame.FULLSCREEN)
 backgrounds = []
 for name in ["LDbackground.png","LDbackground2.png","background4.png"]:
     background = pygame.image.load(os.path.join(filepath, "textures", name))
@@ -2636,7 +2750,7 @@ while State.jump_out == False:
     if Player.hitLag:
         time.sleep(Player.hitLag)
         Player.hitLag=0
-    if len(Player.players)<2:
+    if len(Player.players)<2 or pressed[pygame.K_ESCAPE]:
         choices = restart()
         
         if Player.AIoption != 2:
