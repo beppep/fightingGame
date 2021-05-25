@@ -110,7 +110,7 @@ class Projectile():
         self.xv=0
         if isinstance(self.owner, Green):
             self.xv = (self.facingRight-0.5) * (10+10*self.op)
-            self.box = [32-11, 18, 32-6, 32-9, 20+40*op, 20+40*op, 20+self.owner.attackFrame*op]
+            self.box = [32-11, 18, 32-6, 32-9, 20+40*op, 30+30*op, 20+self.owner.attackFrame*op]
             self.x-=self.xv*2
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
@@ -416,7 +416,7 @@ class Player():
             self.attackFrame = 0
         
         if(self.pressed["5"] and self.ultCharge>self.CHARGE):
-            if not isinstance(self,Lizard) and not isinstance(self, Monster) and not (isinstance(self,Penguin) and not self.wizard):
+            if not isinstance(self,Lizard) and not (isinstance(self,Penguin) and not self.wizard):
                 self.state = 5
                 self.attackFrame = 0
                 self.ultCharge = 0
@@ -1288,7 +1288,7 @@ class Pufferfish(Player):
 
     def passive(self):
         if self.pressed["5"] and self.ultCharge>self.CHARGE:
-            Pillar(self.x,-300,True,{"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+            Pillar(self.x,-300,True,{"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_z, "2":pygame.K_x,"3":pygame.K_c,"4":pygame.K_v,"5":pygame.K_s})
             self.ultCharge = 0
         if self.image == self.longImage:
             self.yv-=0.79
@@ -1353,6 +1353,7 @@ class Pufferfish(Player):
 
     def attack4(self, pressed):
         self.executeAttack(self.ball, not self.pressed["4"])
+        self.ultCharge+=0.1
         if(self.pressed["d"]):
             self.xv=min(self.xspeed*2, self.xv+0.1)
             self.facingRight = True
@@ -1603,6 +1604,7 @@ class Lizard(Player):
         super(Lizard, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-3, 32-17, 16+3, 32-4]
         self.image = Lizard.idleImage
+        self.maxhp = 200
         self.xspeed = 3.5
         self.CHARGE = 25
         self.init2()
@@ -1674,7 +1676,7 @@ class Golem(Player):
 
         self.first = [
         [7, self.prePunchImage],
-        [10, self.punchImage, [21, 18, 25, 22, 15]],
+        [10, self.punchImage, [21, 18, 25, 22, 20]],
         [17, self.punchImage],
         [23, self.prePunchImage],
         ]
@@ -1764,7 +1766,7 @@ class Alien(Player):
 
         self.second = [
         [20, self.prePunchImage],
-        [23, self.punchImage, [17, 19, 23, 23, 25,-7, 33]],
+        [23, self.punchImage, [17, 19, 23, 23, 33, 7, 33]],
         [27, self.punchImage],
         [40, self.prePunchImage],
         ]
@@ -1805,7 +1807,7 @@ class Alien(Player):
             self.xv=self.xv-(self.facingRight*2-1)*2
         elif self.attackFrame < 8: 
             self.image = self.hairImage
-            self.attackBox = [5, 16, 9, 24, 15]
+            self.attackBox = [5, 16, 9, 24, 10, 20, 12]
         elif self.attackFrame < 17:
             self.image = self.hairImage
             self.attackBox = None
@@ -2347,14 +2349,6 @@ class Frog(Player):
     text = "bad i didnt make this"
 class Monster(Player):
 
-    def passive(self):
-        if(self.pressed["5"] and self.ultCharge>1 and not self.stun and self.state==State.idle): #needed both?
-            self.ultCharge = min(self.ultCharge, self.CHARGE)
-            self.state = 5
-            Player.ultSound.play()
-            Player.growSound.play()
-            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
-
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Monster, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-5, 16, 16+5, 32-4]
@@ -2410,9 +2404,16 @@ class Monster(Player):
 
     def attack4(self, pressed):
         self.executeAttack(self.tail, not self.pressed["4"])
+        if self.attackFrame==7:
+            self.yv-=5
 
     def attack5(self, pressed):
-        if self.ultCharge >=0:
+        if self.attackFrame==1:
+            self.ultCharge = self.CHARGE
+            Player.ultSound.play()
+            Player.growSound.play()
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+        elif self.ultCharge>=0:
             self.ultCharge-=0.2
             self.yv-=0.4
             self.image = self.prePunchImage
@@ -2614,6 +2615,7 @@ class Pillar(Player):
         self.attackBox = [16-3,31,16+3,32,20,10]
         self.image=Pillar.idleImage
         self.maxhp=0
+        self.durability = 200
         self.CHARGE=10000
         self.init2()
 
@@ -2621,11 +2623,13 @@ class Pillar(Player):
         self.passive()
 
     def hurt(self, player, damage, knockback=0, stun=0):
-        if self in Player.players:
-            Player.players.remove(self)
-        #player.confirmedHit(damage)
-        playHitSound(State.volume*damage*0.01)
-        Player.shake+=int(damage)
+        self.durability-=damage
+        if self.durability<=0:
+            if self in Player.players:
+                Player.players.remove(self)
+            #player.confirmedHit(damage)
+            playHitSound(State.volume*damage*0.01)
+            Player.shake+=int(damage)
         
     idleImage = Player.load("pufferfish", "pillar.png")
 
@@ -2702,7 +2706,7 @@ def restart():
         textsurface = myfont.render(name, True, (0, 0, 0))
         textsurface2 = myfont2.render(text, True, (0, 0, 0))
         textsurfaceAI = myfont2.render("player 1: "+["WASD, UIOP","AI","Off"][Player.AIoption]+"                        (press 1)", True, (0,0,0))
-        textsurfaceAI2 = myfont2.render("player 2: "+["Arrowkeys, XCVB","AI","Off"][Player.AI2option]+"                (press 2)", True, (0,0,0))
+        textsurfaceAI2 = myfont2.render("player 2: "+["Arrowkeys, ZXCV","AI","Off"][Player.AI2option]+"                (press 2)", True, (0,0,0))
         gameDisplay.blit(textsurface,(545-len(name)*24,450))
         gameDisplay.blit(textsurface2,(10,570))
         gameDisplay.blit(textsurfaceAI,(600,10))
