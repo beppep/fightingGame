@@ -1362,7 +1362,7 @@ class Pufferfish(Player):
             self.facingRight = False
 
     def attack5(self, pressed):
-        Pillar(self.x,-300,True,{"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_x, "2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_s})
+        Pillar(self.x,-300,True,{"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_z, "2":pygame.K_x,"3":pygame.K_c,"4":pygame.K_v,"5":pygame.K_s})
         self.image = self.idleImage
         self.state = State.idle
         self.attackBox = None
@@ -1632,7 +1632,7 @@ class Lizard(Player):
         [25, self.tailImage],
         ]
         self.lick = [
-        [8, self.preLickImage],
+        [9, self.preLickImage],
         [12, self.lickImage, [15, 32-13, 28, 32-12, 0,-29]],
         [15, self.lickImage],
         [29, self.preLickImage],
@@ -2743,7 +2743,7 @@ for i in range(stickNum):
 State.playerCount = 2+len(sticks)
 State.frameRate = 60
 State.jump_out = False
-Player.AIoption = 0 #0:XCVB 1:ai 2:off
+Player.AIoption = 0 #0:ZXCV 1:ai 2:off
 Player.AI2option = 0 #0:UIOP 1:ai 2:off
 while State.jump_out == False:
 
@@ -2763,7 +2763,7 @@ while State.jump_out == False:
                 Player.players[-1].random=1
         humansBefore=len(Player.players)
         if Player.AI2option != 2:
-            choices[humansBefore](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_x,"2":pygame.K_c,"3":pygame.K_v,"4":pygame.K_b,"5":pygame.K_DOWN})
+            choices[humansBefore](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_z,"2":pygame.K_x,"3":pygame.K_c,"4":pygame.K_v,"5":pygame.K_DOWN})
             if Player.AI2option == 1:
                 Player.players[-1].random=1
         humansBefore=len(Player.players)
