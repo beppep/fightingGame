@@ -3,7 +3,7 @@ import time
 import random
 import os
 clock = pygame.time.Clock()
-filepath=""
+filepath="fightingGameFiles"
 #Adam "jag tycker ändå det kan funka med ett cirkelargument."
 SOUND_PATH = os.path.join(filepath, "sounds")
 
@@ -28,7 +28,7 @@ def initSound():
     Player.gameSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "game.wav"))
     Player.gameSound.set_volume(v*0.5)
     
-    pygame.mixer.music.load("music.wav") #must be wav 16bit and stuff?
+    pygame.mixer.music.load(os.path.join(filepath, "music.wav")) #must be wav 16bit and stuff?
     pygame.mixer.music.set_volume(v*0.1)
     pygame.mixer.music.play(-1)
 
@@ -53,9 +53,11 @@ def countPlayers():
         if isinstance(player, Tree):
             if not player.code in codes:
                 codes.append(player.code)
+                players+=1
+        elif isinstance(player, Pillar):
+            pass
         else:
             players+=1
-    players+=len(codes)
     return players
 
 class State():
@@ -335,7 +337,7 @@ class Player():
                 target = Player.players[0]
             else:
                 enemies = Player.players[:]
-                enemies.remove(self)
+                #enemies.remove(self)
                 target = random.choice(enemies)
             if random.random()<0.1:
                 self.pressed["d"] = random.randint(0,1)
@@ -786,7 +788,7 @@ class Big(Player):
         elif self.attackFrame < 170:
             self.image = self.midPunchImage
             self.attackBox = None
-            if self.attackFrame%5==0:
+            if self.attackFrame%7==0:
                 self.facingRight = not self.facingRight
         else:
             self.state = State.idle
@@ -921,9 +923,9 @@ class Tree(Player):
 
     def passive(self):
         if random.randint(0,50)<1: #dont know if this is needed
-            num = countPlayers()
-            if num==1:
-                Player.players.remove(self)
+            if countPlayers()<2:
+                if self in Player.players:
+                    Player.players.remove(self)
 
     def isLastTree(self):
         for player in Player.players:
@@ -992,7 +994,7 @@ class Tree(Player):
             self.box = [16-3, 32-12, 16+3, 32-4]
             self.attackBox = [16-2, 32-15, 16+2, 32-4,10,40,10]
             self.image = self.idleImage
-        elif self.attackFrame < 58:
+        elif self.attackFrame < 65:
             self.box = [16-3, 32-15, 16+3, 32-4]
         else:
             self.state = State.idle
@@ -1026,7 +1028,7 @@ class Tree(Player):
             self.attackBox = [16-2, 32-15, 16+2, 32-4,10,40,10]
             self.box = [16-3, 32-12, 16+3, 32-4]
             self.image = self.idleImage
-        elif self.attackFrame < 70:
+        elif self.attackFrame < 78:
             self.box = [16-3, 32-15, 16+3, 32-4]
         else:
             self.state = State.idle
@@ -1185,9 +1187,9 @@ class Animals(Player):
 
         self.second = [
         [10, self.prePunchImage],
-        [15, self.punchImage, [24,21,26,23, 1,0,5]],
+        [15, self.punchImage, [24,21,26,23, 5,0,5]],
         [20, self.punchImage],
-        [25, self.punchImage, [24,21,26,23, 3,-60,10]],
+        [25, self.punchImage, [24,21,26,23, 7,-60,10]],
         [34, self.postPunchImage, [22,14,24,16, 9,-35,20]],
         [39, self.prePunchImage],
         ]
@@ -2056,7 +2058,7 @@ class Rat(Player):
     preTail2Image = Player.load("rat", "preTail2.png")
     tailImage = Player.load("rat", "tail.png")
 
-    text = "Technically a mouse"
+    text = "Technically a mouse        (BANNED)"
 class Skugg(Player):
 
     def passive(self):
@@ -2167,7 +2169,7 @@ class Skugg(Player):
     ultImages = [Player.load("skugg", "SkuggVarg_"+str(i)+".png") for i in range(44,61)]
     stunnedImage = Player.load("skugg", "SkuggVarg_16.png")
 
-    text = "Simultaneous wolf or elk silhouette?"
+    text = "Simultaneous wolf or elk silhouette?        (BANNED)"
 
 class Can(Player):
 
@@ -2227,7 +2229,7 @@ class Can(Player):
     prePunchImage = Player.load("can", "prepunch.png")
     punchImage = Player.load("can", "punch.png")
     waterImage = Player.load("can", "water.png")
-    text = "DANSKA BURKEN"
+    text = "DANSKA BURKEN        (BANNED)"
 class Frog(Player):
 
     def passive(self):
@@ -2346,7 +2348,7 @@ class Frog(Player):
     preLickImage = Player.load("frog", "prelick.png")
     lickImage = Player.load("frog", "lick.png")
     jumpImage = Player.load("frog", "jump.png")
-    text = "bad i didnt make this"
+    text = "Not very good character        (BANNED)"
 class Monster(Player):
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
@@ -2601,11 +2603,7 @@ class Pillar(Player):
 
     def passive(self):
         if random.randint(1,30)==1:
-            p=0
-            for player in Player.players:
-                if not isinstance(player,Pillar):
-                    p+=1
-            if p<2:
+            if countPlayers()<2:
                 if self in Player.players:
                     Player.players.remove(self)
 
@@ -2634,17 +2632,17 @@ class Pillar(Player):
     idleImage = Player.load("pufferfish", "pillar.png")
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Skugg, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Skugg, Rat, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Skugg, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Skugg, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
 ]
 
 def restart():
     Player.players = []
     choices = []
     num = 0
-    myfont = pygame.font.SysFont('Times New', 100)
-    myfont2 = pygame.font.SysFont('Times New Roman', 20)
+    myfont = pygame.font.SysFont('Calibri', 100)
+    myfont2 = pygame.font.SysFont('Calibri', 20)
     pressed = pygame.key.get_pressed()
     while State.jump_out == False and not pressed[pygame.K_q]:
         #pygame.event.get()
@@ -2662,18 +2660,18 @@ def restart():
             lag+=0.1
         if pressed[pygame.K_1]:
             Player.AIoption+=1
-            if Player.AIoption==3:
+            if Player.AIoption==4:
                 Player.AIoption=0
                 State.playerCount+=1
-            if Player.AIoption==2:
+            if Player.AIoption==3:
                 State.playerCount-=1
             lag+=0.2
         if pressed[pygame.K_2]:
             Player.AI2option+=1
-            if Player.AI2option==3:
+            if Player.AI2option==4:
                 Player.AI2option=0
                 State.playerCount+=1
-            if Player.AI2option==2:
+            if Player.AI2option==3:
                 State.playerCount-=1
             lag+=0.2
         if pressed[pygame.K_r]:
@@ -2705,8 +2703,8 @@ def restart():
         text = allClasses[num%len(allClasses)].text
         textsurface = myfont.render(name, True, (0, 0, 0))
         textsurface2 = myfont2.render(text, True, (0, 0, 0))
-        textsurfaceAI = myfont2.render("player 1: "+["WASD, UIOP","AI","Off"][Player.AIoption]+"                        (press 1)", True, (0,0,0))
-        textsurfaceAI2 = myfont2.render("player 2: "+["Arrowkeys, ZXCV","AI","Off"][Player.AI2option]+"                (press 2)", True, (0,0,0))
+        textsurfaceAI = myfont2.render("player 1: "+["WASD, UIOP","WASD, ZXCV","AI","Off"][Player.AIoption]+"                        (press 1)", True, (0,0,0))
+        textsurfaceAI2 = myfont2.render("player 2: "+["Arrowkeys, ZXCV","Arrowkeys, UIOP","AI","Off"][Player.AI2option]+"                (press 2)", True, (0,0,0))
         gameDisplay.blit(textsurface,(545-len(name)*24,450))
         gameDisplay.blit(textsurface2,(10,570))
         gameDisplay.blit(textsurfaceAI,(600,10))
@@ -2743,8 +2741,8 @@ for i in range(stickNum):
 State.playerCount = 2+len(sticks)
 State.frameRate = 60
 State.jump_out = False
-Player.AIoption = 0 #0:ZXCV 1:ai 2:off
-Player.AI2option = 0 #0:UIOP 1:ai 2:off
+Player.AIoption = 0 #0:ZXCV 1:UIOP 2:ai 3:off
+Player.AI2option = 0 #0:UIOP 1:ZXCV 2:ai 3:off
 while State.jump_out == False:
 
     #pygame.event.get()
@@ -2757,19 +2755,25 @@ while State.jump_out == False:
     if len(Player.players)<2 or pressed[pygame.K_ESCAPE]:
         choices = restart()
         
-        if Player.AIoption != 2:
-            choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_u, "2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_s})
-            if Player.AIoption == 1:
+        if Player.AIoption != 3:
+            if Player.AIoption == 0:
+                choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_u, "2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_s})
+            else:
+                choices[0](200, 300, True, {"a":pygame.K_a, "d":pygame.K_d, "w":pygame.K_w, "1":pygame.K_z, "2":pygame.K_x,"3":pygame.K_c,"4":pygame.K_v,"5":pygame.K_s})
+            if Player.AIoption == 2:
                 Player.players[-1].random=1
         humansBefore=len(Player.players)
-        if Player.AI2option != 2:
-            choices[humansBefore](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_z,"2":pygame.K_x,"3":pygame.K_c,"4":pygame.K_v,"5":pygame.K_DOWN})
-            if Player.AI2option == 1:
+        if Player.AI2option != 3:
+            if Player.AI2option == 0:
+                choices[humansBefore](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_z,"2":pygame.K_x,"3":pygame.K_c,"4":pygame.K_v,"5":pygame.K_DOWN})
+            else:
+                choices[humansBefore](600, 300, False, {"a":pygame.K_LEFT, "d":pygame.K_RIGHT, "w":pygame.K_UP, "1":pygame.K_u,"2":pygame.K_i,"3":pygame.K_o,"4":pygame.K_p,"5":pygame.K_DOWN})
+            if Player.AI2option == 2:
                 Player.players[-1].random=1
         humansBefore=len(Player.players)
         for i in range(len(sticks)):
             choices[humansBefore+i](400, 300, False, {"w":0,"3":4,"4":5,"5":1}, sticks[i])
-        AiFocus = 0
+        AiFocus = 0 #cannot be 1!!!! or it crashes when ai is alone.
 
         currentBackground = random.choice(backgrounds)
         Platform.restart()
