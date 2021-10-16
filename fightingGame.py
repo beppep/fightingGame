@@ -418,7 +418,7 @@ class Player():
             self.attackFrame = 0
         
         if(self.pressed["5"] and self.ultCharge>self.CHARGE):
-            if not isinstance(self,Lizard) and not (isinstance(self,Penguin) and not self.wizard):
+            if not isinstance(self,Lizard) and not (isinstance(self,Penguin) and not self.wizard) and not (isinstance(self,Crawler) and self.evil):
                 self.state = 5
                 self.attackFrame = 0
                 self.ultCharge = 0
@@ -1378,6 +1378,142 @@ class Pufferfish(Player):
     magicImage = Player.load("pufferfish", "magic.png")
     stunnedImage = Player.load("pufferfish", "stunned.png")
     text = "yo"
+class Crawler(Player):
+    
+    def passive(self):
+        if self.evil:
+            self.idleImage = self.evilImage
+            self.stunnedImage = self.evilStunnedImage
+            self.first = self.lick
+            self.second = self.lick
+            self.third = self.ball
+            self.xspeed = 3
+            self.canDoubleJump = 0
+        else:
+            self.idleImage = self.normalImage
+            self.stunnedImage = self.normalStunnedImage
+            self.first = self.stab
+            self.second = self.stab
+            self.third = self.glide
+            self.xspeed = 2
+            self.canDoubleJump = 1
+    def confirmedHit(self, damage):
+        if self.state<3 and not self.evil:
+            self.xv=max(abs(self.xv), 3)*(self.facingRight*2-1)
+            self.yv=-11
+        if self.state<4 and self.evil:
+            self.hp=min(self.hp+damage, self.maxhp)
+            #self.ultCharge+=10
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super().__init__(x, y, facingRight, controls, joystick)
+        self.box = [16-4, 14, 16+4, 32-5]
+        self.image = Crawler.idleImage
+        self.xspeed = 2
+        self.maxhp = 200
+        self.evil = 0
+        self.init2()
+        self.canDoubleJump = True
+
+        self.stab = [
+        [5, self.prePunchImage],
+        [8, self.punchImage, [24, 12, 28, 16, 19, 50, 19]], #y goes down to 16 to hit bird
+        [13, self.punchImage],
+        [18, self.prePunchImage],
+        ]
+
+        self.glide = [
+        [6, self.preKickImage],
+        [16, self.kickImage, [17, 23, 17+9, 27, 19,80,11]],
+        [27, self.kickImage],
+        [39, self.preKickImage],
+        ]
+
+        self.lick = [
+        [3, self.preLickImage],
+        [6, self.lickImage, [20, 17, 25, 21, 21]],
+        [13, self.lickImage],
+        [22, self.preLickImage],
+        ]
+
+        self.ball = [
+        [11, self.preImage],
+        [200, self.longImage, None, True],
+        [211, self.preImage],
+        ]
+
+    def attack3(self, pressed):
+        self.executeAttack(self.third, not self.pressed["3"])
+        if not self.evil:
+            if 6<self.attackFrame<16 and self.onGround: #jumpcancel slide
+                self.xv=(self.facingRight-0.5)*16
+            if 12<self.attackFrame<20:# and self.onGround:
+                if self.pressed["w"] and (self.onGround or self.doubleJump==-1):
+                    if not self.onGround:
+                        self.doubleJump=0
+                        theImage = Player.hurtImage2[not self.facingRight]
+                        gameDisplay.blit(theImage, (int(self.x), int(self.y)+40))
+                    self.yv=-13.1
+                    self.state = State.idle
+                    self.image = self.idleImage
+                    self.attackBox = None
+        else:
+            self.ultCharge+=0.1
+            if self.image == self.preImage:
+                self.yv-=0.51
+                self.yv*=0.97
+            if self.image == self.longImage:
+                self.yv-=0.79
+                self.yv*=0.95
+
+    def attack4(self, pressed):
+        if self.attackFrame==1:
+            self.becomingEvil = not self.evil
+        elif self.attackFrame==7+7*self.becomingEvil:
+            Player.lickSound.play()
+
+        if self.attackFrame < 12+12*self.becomingEvil:
+            self.image = self.preEvilImage
+        elif self.attackFrame == 12+12*self.becomingEvil:
+            self.evil = self.becomingEvil
+        elif self.attackFrame < 20+30*self.becomingEvil:
+            self.image = self.idleImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    def attack5(self, pressed):
+        if self.attackFrame == 1:
+            Player.ultSound.play()
+            Player.lickSound.play()
+            self.evil = not self.evil
+
+        if self.attackFrame < 4:
+            self.image = self.preEvilImage
+        elif self.attackFrame < 8:
+            self.image = self.idleImage
+        else:
+            self.state = State.idle
+            self.image = self.idleImage
+            self.attackBox = None
+
+    normalImage = Player.load("crawler", "idle.png")
+    normalStunnedImage = Player.load("crawler", "hurt.png")
+    evilStunnedImage=Player.load("crawler", "evilhurt.png")
+    prePunchImage = Player.load("crawler", "prepunch.png")
+    punchImage = Player.load("crawler", "punch.png")
+    preKickImage = Player.load("crawler", "prekick.png")
+    kickImage = Player.load("crawler", "kick.png")
+    preLickImage=Player.load("crawler", "prelick.png")
+    lickImage=Player.load("crawler", "lick.png")
+    preEvilImage=Player.load("crawler", "preevil.png")
+    evilImage=Player.load("crawler", "evil.png")
+    preImage=Player.load("crawler", "prelong.png")
+    longImage=Player.load("crawler", "long.png")
+
+    idleImage = normalImage #selesctscreen
+    text = "Ew...."
 
 class Bird(Player):
 
@@ -2632,9 +2768,9 @@ class Pillar(Player):
     idleImage = Player.load("pufferfish", "pillar.png")
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Skugg, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Skugg, Can, Frog, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
 ]
 
 def restart():
