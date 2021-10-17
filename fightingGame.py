@@ -30,7 +30,7 @@ def initSound():
     
     pygame.mixer.music.load(os.path.join(filepath, "music.wav")) #must be wav 16bit and stuff?
     pygame.mixer.music.set_volume(v*0.1)
-    pygame.mixer.music.play(-1)
+    #pygame.mixer.music.play(-1)
 
 def playHitSound(vol):
     i = random.randint(0,1)
@@ -1425,8 +1425,8 @@ class Crawler(Player):
         self.glide = [
         [6, self.preKickImage],
         [16, self.kickImage, [17, 23, 17+9, 27, 19,80,11]],
-        [27, self.kickImage],
-        [39, self.preKickImage],
+        [29, self.kickImage],
+        [43, self.preKickImage],
         ]
 
         self.lick = [
@@ -1459,6 +1459,12 @@ class Crawler(Player):
                     self.attackBox = None
         else:
             self.ultCharge+=0.1
+            if(self.pressed["d"]):
+                self.xv=min(self.xspeed*2, self.xv+0.1)
+                self.facingRight = True
+            if(self.pressed["a"]):
+                self.xv=max(-self.xspeed*2, self.xv-0.1)
+                self.facingRight = False
             if self.image == self.preImage:
                 self.yv-=0.51
                 self.yv*=0.97
@@ -1469,19 +1475,36 @@ class Crawler(Player):
     def attack4(self, pressed):
         if self.attackFrame==1:
             self.becomingEvil = not self.evil
-        elif self.attackFrame==7+7*self.becomingEvil:
+        if self.attackFrame==5:
             Player.lickSound.play()
 
-        if self.attackFrame < 12+12*self.becomingEvil:
-            self.image = self.preEvilImage
-        elif self.attackFrame == 12+12*self.becomingEvil:
-            self.evil = self.becomingEvil
-        elif self.attackFrame < 20+30*self.becomingEvil:
-            self.image = self.idleImage
+        if self.becomingEvil:
+            if self.attackFrame < 4:
+                self.image = self.idleImage
+            elif self.attackFrame < 24:
+                self.image = self.preEvilImage
+            elif self.attackFrame == 24:
+                self.evil = 1
+            elif self.attackFrame < 44:
+                self.image = self.midEvilImage
+            else:
+                self.state = State.idle
+                self.image = self.idleImage
+                self.attackBox = None
+
         else:
-            self.state = State.idle
-            self.image = self.idleImage
-            self.attackBox = None
+            if self.attackFrame < 9:
+                self.image = self.midEvilImage
+            elif self.attackFrame == 14:
+                self.evil = 0
+            elif self.attackFrame < 20:
+                self.image = self.preEvilImage
+            elif self.attackFrame < 24:
+                self.image = self.idleImage
+            else:
+                self.state = State.idle
+                self.image = self.idleImage
+                self.attackBox = None
 
     def attack5(self, pressed):
         if self.attackFrame == 1:
@@ -1489,10 +1512,10 @@ class Crawler(Player):
             Player.lickSound.play()
             self.evil = not self.evil
 
-        if self.attackFrame < 4:
+        if self.attackFrame < 8:
             self.image = self.preEvilImage
-        elif self.attackFrame < 8:
-            self.image = self.idleImage
+        elif self.attackFrame < 12:
+            self.image = self.midEvilImage
         else:
             self.state = State.idle
             self.image = self.idleImage
@@ -1508,6 +1531,7 @@ class Crawler(Player):
     preLickImage=Player.load("crawler", "prelick.png")
     lickImage=Player.load("crawler", "lick.png")
     preEvilImage=Player.load("crawler", "preevil.png")
+    midEvilImage=Player.load("crawler", "midevil.png")
     evilImage=Player.load("crawler", "evil.png")
     preImage=Player.load("crawler", "prelong.png")
     longImage=Player.load("crawler", "long.png")
@@ -2775,7 +2799,7 @@ Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizar
 
 def restart():
     Player.players = []
-    choices = []
+    choices = [Crawler]
     num = 0
     myfont = pygame.font.SysFont('Calibri', 100)
     myfont2 = pygame.font.SysFont('Calibri', 20)
@@ -2810,7 +2834,7 @@ def restart():
             if Player.AI2option==3:
                 State.playerCount-=1
             lag+=0.2
-        if pressed[pygame.K_r]:
+        if pressed[pygame.K_r] or 1:
             choices.append(random.choice(allClasses))
             #num=0
             if len(choices)>=State.playerCount:
