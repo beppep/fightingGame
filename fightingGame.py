@@ -30,7 +30,7 @@ def initSound():
     
     pygame.mixer.music.load(os.path.join(filepath, "music.wav")) #must be wav 16bit and stuff?
     pygame.mixer.music.set_volume(v*0.1)
-    #pygame.mixer.music.play(-1)
+    pygame.mixer.music.play(-1)
 
 def playHitSound(vol):
     i = random.randint(0,1)
@@ -2799,7 +2799,7 @@ Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizar
 
 def restart():
     Player.players = []
-    choices = [Crawler]
+    choices = []
     num = 0
     myfont = pygame.font.SysFont('Calibri', 100)
     myfont2 = pygame.font.SysFont('Calibri', 20)
@@ -2834,7 +2834,7 @@ def restart():
             if Player.AI2option==3:
                 State.playerCount-=1
             lag+=0.2
-        if pressed[pygame.K_r] or 1:
+        if pressed[pygame.K_r]:
             choices.append(random.choice(allClasses))
             #num=0
             if len(choices)>=State.playerCount:
