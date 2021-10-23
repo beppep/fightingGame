@@ -120,7 +120,7 @@ class Projectile():
             self.x-=self.xv*3
         if isinstance(self.owner, Alien):
             self.xv = (self.facingRight-0.5) * -20
-            self.box = [3, 14, 7, 17, 7,0,20]
+            self.box = [3, 14, 7, 17, 10,0,10]
             self.x-=self.xv*4
             self.yv = .5
         if isinstance(self.owner, Glitch):
@@ -208,6 +208,7 @@ class Projectile():
                     if self in Projectile.projectiles and not (isinstance(player, Player) and player.invincible):
                         Projectile.projectiles.remove(self)
                     if isinstance(player, Player):
+                        player.confirmedHit(otherBox[4])
                         if (player.state==3 and type(player) == Lizard) or player.state==4 and type(player)==Golem or (player.state in [1,2] and type(player) in [Frog, Monster, Animals]):
                             player.hp=min(player.hp+30, player.maxhp)
                             Player.lickSound.play()
@@ -550,7 +551,7 @@ class Player():
             self.yv=-abs(knockback*0.2)
             self.xv=knockback*(self.facingRight-0.5)*-0.2
         #effects
-        Player.shake+=int(damage)
+        Player.shake=max(Player.shake, int(damage))
         if damage>10+random.random()*40:
             theImage = Player.hurtImage[self.facingRight]
             gameDisplay.blit(theImage, (int(self.x)+self.facingRight*20, int(self.y)))
@@ -1871,7 +1872,7 @@ class Golem(Player):
         ]
 
     def confirmedHit(self, damage):
-        if self.state==4:
+        if self.state==3:
             self.xv*=0.5
             self.yv*=0.2
 
@@ -2895,8 +2896,6 @@ sticks=[]
 for i in range(stickNum):
     sticks.append(pygame.joystick.Joystick(i))
     sticks[-1].init()
-    #print(i)
-
 State.playerCount = 2+len(sticks)
 State.frameRate = 60
 State.jump_out = False
