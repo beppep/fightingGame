@@ -193,7 +193,6 @@ class Projectile():
         if isinstance(self.owner, Sad):
             if self.lifetime<40:
                 self.lifetime+=1
-                print(self.lifetime)
                 return
         for player in Player.players+Projectile.projectiles+Platform.platforms:
             if player == self:
@@ -524,7 +523,7 @@ class Player():
 
     def hurt(self, player, damage, knockback=None, stun=None):
         if(self.invincible):
-            print("shouldnt be called by physics() then?")
+            #print("shouldnt be called by physics() then?")
             return
         player.confirmedHit(damage)
         playHitSound(State.volume*damage*0.01)
@@ -2896,7 +2895,7 @@ sticks=[]
 for i in range(stickNum):
     sticks.append(pygame.joystick.Joystick(i))
     sticks[-1].init()
-    print(i)
+    #print(i)
 
 State.playerCount = 2+len(sticks)
 State.frameRate = 60
@@ -2973,4 +2972,4 @@ while State.jump_out == False:
     
     
 pygame.quit()
-quit()
+#quit() #bad for pyinstaller
