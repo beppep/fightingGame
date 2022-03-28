@@ -158,7 +158,8 @@ class Projectile():
         nevercalled
         pass
     def confirmedHit(self,damage):
-        pass   
+        pass
+        self.owner.confirmedHit(damage)
     def draw(self):
         if self.op:
             gameDisplay.blit(self.image[self.facingRight], (int(self.x+random.randint(-1,1)*8+shakeX), int(self.y+random.randint(-1,1)*8+shakeY)))
@@ -355,7 +356,7 @@ class Player():
                     self.pressed["d"] = target.x > self.x
                     if isinstance(self, Alien) and (self.pressed["3"] or self.pressed["4"]):
                         self.pressed["d"] = target.x < self.x
-                    if isinstance(self, Lizard) and self.pressed["4"]:
+                    if (isinstance(self, Lizard) or isinstance(self, Penguin)) and self.pressed["4"]:
                         self.pressed["d"] = target.x < self.x
                         #self.pressed["w"] = True
 
@@ -680,6 +681,12 @@ class Puncher(Player):
         self.executeAttack(self.long, not self.pressed["3"])
     def attack4(self, pressed):
         self.executeAttack(self.extreme, not self.pressed["4"])
+        if not self.pressed["4"] and self.attackFrame<4:
+            self.xv*=-1
+            self.yv*=-1
+            self.state = State.idle
+            self.image = self.cursedImage
+            self.attackBox = None
     def attack5(self, pressed):
         if self.attackFrame == 1:
             Player.ultSound.play()
@@ -709,7 +716,7 @@ class Puncher(Player):
             self.attackBox = None
         else:
             self.state = State.idle
-            self.image = self.cursedImage
+            self.image = self.idleImage
             self.attackBox = None
 
     idleImage = Player.load("puncher", "idle.png")
@@ -884,6 +891,9 @@ class Green(Player):
             self.attackBox = None
             if self.attackFrame%15==0:
                 self.facingRight = not self.facingRight
+                if self.pressed["4"]:
+                    for i in Player.players:
+                        i.facingRight = not i.facingRight
         else:
             self.hp = min(self.maxhp, self.hp+30)
             self.state = State.idle
@@ -1134,6 +1144,7 @@ class Sad(Player):
             if not self.pressed["3"]:
                 self.attackFrame = -2
         else:
+            self.hp+=0.1
             self.state=State.idle
             self.image=self.idleImage
             self.attackBox=None
@@ -1179,19 +1190,19 @@ class Animals(Player):
         self.init2()
 
         self.first = [
-        [5, self.prePunchImage],
-        [10, self.punchImage, [24,21,26,23, 10]],
-        [15, self.punchImage],
-        [20, self.prePunchImage],
+        [4, self.prePunchImage],
+        [7, self.punchImage, [24,21,26,23, 10]],
+        [11, self.punchImage],
+        [16, self.prePunchImage],
         ]
 
         self.second = [
-        [10, self.prePunchImage],
-        [15, self.punchImage, [24,21,26,23, 5,0,5]],
-        [20, self.punchImage],
-        [25, self.punchImage, [24,21,26,23, 7,-60,10]],
-        [34, self.postPunchImage, [22,14,24,16, 9,-35,20]],
-        [39, self.prePunchImage],
+        [8, self.prePunchImage],
+        [13, self.punchImage, [24,21,26,23, 5,0,5]],
+        [18, self.punchImage],
+        [23, self.punchImage, [24,21,26,23, 7,-60,10]],
+        [32, self.postPunchImage, [22,14,24,16, 9,-35,20]],
+        [37, self.prePunchImage],
         ]
 
         self.third = [
@@ -1377,7 +1388,7 @@ class Pufferfish(Player):
     longImage = Player.load("pufferfish", "long.png")
     magicImage = Player.load("pufferfish", "magic.png")
     stunnedImage = Player.load("pufferfish", "stunned.png")
-    text = "yo"
+    text = "Has a sharp and swift fin and can heal by sucking blood using its spikes. Can summon the spear of Helios."
 class Crawler(Player):
     
     def passive(self):
@@ -1537,7 +1548,7 @@ class Crawler(Player):
     longImage=Player.load("crawler", "long.png")
 
     idleImage = normalImage #selesctscreen
-    text = "Ew...."
+    text = "Don't let it turn inside out. It is much scarier that way..."
 
 class Bird(Player):
 
@@ -1591,6 +1602,11 @@ class Bird(Player):
         ]
 
     def attack3(self, pressed):
+        if self.pressed["a"] and not self.pressed["d"] and self.facingRight:
+            self.facingRight = False
+        if self.pressed["d"] and not self.pressed["a"] and not self.facingRight:
+            self.facingRight = True
+
         if self.attackFrame < 30:
             self.image = self.preelImage #preel/dodgeImage
             self.attackBox = None
@@ -1690,6 +1706,13 @@ class Robot(Player):
         if self.attackFrame==101:
             Player.bzzzSound.stop()
 
+    def attack2(self, pressed):
+        self.executeAttack(self.second, not self.pressed["2"])
+        if self.attackFrame == 31:
+            if not self.pressed["1"]:
+                self.xv += (self.facingRight-0.5)*-10
+                self.yv = -4
+
     def attack3(self, pressed):
         if self.attackFrame < 8:
             self.image = self.idleImage
@@ -1697,6 +1720,9 @@ class Robot(Player):
         elif self.attackFrame < 14: 
             self.image = self.fireImage
         elif self.attackFrame == 14:
+            if not self.pressed["1"]:
+                self.xv += (self.facingRight-0.5)*-8
+                self.yv = -3
             self.image = self.fireImage
             Projectile.projectiles.append(Projectile(self))
             playHitSound(State.volume*0.2)
@@ -1761,6 +1787,7 @@ class Lizard(Player):
     def confirmedHit(self, damage):
         if self.state==4:
             self.ultCharge=100
+            self.yv=-2
 
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Lizard, self).__init__(x, y, facingRight, controls, joystick)
@@ -1909,6 +1936,9 @@ class Alien(Player):
     def passive(self):
         self.yv-=0.1
 
+    def confirmedHit(self, damage):
+        self.yv=-2
+
     def __init__(self, x, y, facingRight, controls,joystick=None):
         super(Alien, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [13, 14, 19, 28]
@@ -1918,12 +1948,12 @@ class Alien(Player):
         self.canDoubleJump = True
 
         self.first = [
-        [9, self.prePunchImage],
-        [14, self.punchImage, [17, 19, 23, 23, 5,-11]],
-        [17, self.punchImage],
-        [21, self.prePunchImage],
-        [31, self.punchImage, [17, 19, 23, 23, 13]],
-        [36, self.prePunchImage],
+        [7, self.prePunchImage],
+        [12, self.punchImage, [17, 19, 23, 23, 5,-11]],
+        [15, self.punchImage],
+        [19, self.prePunchImage],
+        [29, self.punchImage, [17, 19, 23, 23, 13]],
+        [33, self.prePunchImage],
         ]
 
         self.second = [
@@ -2009,6 +2039,7 @@ class Glitch(Player):
         self.box = [13, 15, 19, 28]
         self.canDoubleJump = True
         self.image = self.idleImage
+        self.glitchCharge = 0
         self.init2()
 
         self.first = [
@@ -2035,6 +2066,8 @@ class Glitch(Player):
         if self.state==2:
             self.xv*=0.5
             self.yv*=0.2
+            self.xv = (self.pressed["d"]-self.pressed["a"])*4
+            self.yv = self.pressed["w"]*-4
         #self.image=self.shimmerImage # this is really funny actually
     def passive(self):
         if(self.image==self.shimmerImage):
@@ -2046,6 +2079,7 @@ class Glitch(Player):
             self.box = [13, 15, 19, 28]
             self.xspeed = 2.5
             self.flyingHeight=0
+
     def attack1(self, pressed):
         if(self.image==self.shimmerImage):
             self.attackFrame=11
@@ -2511,6 +2545,10 @@ class Frog(Player):
     text = "Not very good character        (BANNED)"
 class Monster(Player):
 
+    def confirmedHit(self, damage):
+        if self.state==4:
+            self.yv=-15
+
     def __init__(self, x, y, facingRight, controls, joystick=None):
         super(Monster, self).__init__(x, y, facingRight, controls, joystick)
         self.box = [16-5, 16, 16+5, 32-4]
@@ -2566,8 +2604,6 @@ class Monster(Player):
 
     def attack4(self, pressed):
         self.executeAttack(self.tail, not self.pressed["4"])
-        if self.attackFrame==7:
-            self.yv-=5
 
     def attack5(self, pressed):
         if self.attackFrame==1:
@@ -2594,7 +2630,7 @@ class Monster(Player):
     preKickImage = Player.load("monster", "prekick.png")
     kickImage = Player.load("monster", "kick.png")
     projbImage = Player.load("monster", "proj.png")
-    text = "This character is very interesting."
+    text = "Uses kinetic acid produced in the tongue to perform various strategies."
 class Penguin(Player):
 
     def passive(self):
@@ -2615,7 +2651,7 @@ class Penguin(Player):
             self.xspeed = 3.5
             self.canDoubleJump = False
     def confirmedHit(self, damage):
-        if (self.state>0 and self.state<3) and self.wizard:
+        if (self.state>0 and self.state<3 or self.state==4) and self.wizard:
             self.xv*=0.5
             self.yv*=0.2
             self.yv-=5
@@ -2754,6 +2790,118 @@ class Penguin(Player):
     text = "Is a wizard sometimes."
 
     idleImage = ninjaImage #selesctscreen
+class Turtle(Player):
+
+    def passive(self):
+        if self.state == State.stunned:
+            self.stun-=0.2
+
+    def confirmedHit(self, damage):
+        if self.state==5:
+            self.yv*=0.1
+
+    def __init__(self, x, y, facingRight, controls,joystick=None):
+        super(Turtle, self).__init__(x, y, facingRight, controls, joystick)
+        self.box = [8, 21, 8+15, 21+7]
+        self.image = Turtle.idleImage
+        self.xspeed = 2
+        self.init2()
+        self.canDoubleJump = False
+
+        self.first = [
+        [3, self.idleImage],
+        [5, self.punchImage, [21, 22, 25, 26, 11]],
+        [10, self.punchImage],
+        [15, self.idleImage],
+        ]
+
+        self.second = [
+        [5, self.preshellImage],
+        [10, self.shellImage],
+        [20, self.dashImage, [7, 24, 7+17, 27, 20,22]],
+        [25, self.dashImage],
+        [30, self.shellImage],
+        [35, self.preshellImage],
+        ]
+
+        self.spike = [
+        [5, self.preshellImage],
+        [10, self.shellImage],
+        [100, self.spikeImage, [9, 20, 9+13, 24, 20, 40], True],
+        [111, self.preshellImage],
+        [118, self.idleImage],
+        ]
+
+        self.block = [
+        [3, self.preshellImage],
+        [100, self.shellImage, None, True],
+        [105, self.preshellImage],
+        [108, self.idleImage],
+        ]
+
+        self.dash = [
+        [5, self.preshellImage],
+        [60, self.dashImage, [21, 22, 25, 26, 9]],
+        [71, self.ultImage, [8, 20, 26, 26, 30, 45]],
+        [77, self.preshellImage],
+        [83, self.idleImage],
+        ]
+
+    def attack2(self, pressed):
+        self.executeAttack(self.second, not self.pressed["2"])
+
+        if 10<self.attackFrame<20:
+            self.xv=(self.facingRight-0.5)*12
+        if self.attackFrame==10:
+            self.yv-=5
+
+        if self.attackFrame == 6:
+            self.invincible=True
+        elif self.attackFrame == 31:
+            self.invincible=False
+    def attack3(self, pressed):
+        self.executeAttack(self.spike, not self.pressed["3"])
+        if self.attackFrame == 6:
+            self.invincible=True
+        elif self.attackFrame == 101:
+            self.invincible=False
+    def attack4(self, pressed):
+        self.executeAttack(self.block, not self.pressed["4"])
+        if self.attackFrame == 6:
+            self.invincible=True
+        elif self.attackFrame == 101:
+            self.invincible=False
+        if 6<self.attackFrame<101:
+            if self.pressed["d"]:
+                self.xv=3
+                self.facingRight = True
+            if self.pressed["a"]:
+                self.xv=-3
+                self.facingRight = False
+
+            self.yv*=0.9
+    def attack5(self, pressed):
+        self.executeAttack(self.dash, not self.pressed["5"])
+        if self.attackFrame == 1:
+            self.invincible=True
+            Player.ultSound.play()
+        elif self.attackFrame == 61:
+            self.invincible=False
+            pygame.draw.rect(gameDisplay, (0, 100, 100), (0,0,1000,504), 0)
+
+        if self.attackFrame < 61:
+            self.xv = (self.facingRight-0.5)*20
+            self.yv-=0.5
+
+    idleImage = Player.load("turtle", "idle.png")
+    preshellImage = Player.load("turtle", "preshell.png")
+    shellImage = Player.load("turtle", "shell.png")
+    spikeImage = Player.load("turtle", "spike.png")
+    dashImage = Player.load("turtle", "dash.png")
+    ultImage = Player.load("turtle", "ult.png")
+    stunnedImage = Player.load("turtle", "stunned.png")
+    punchImage = Player.load("turtle", "punch.png")
+    text = "Was chosen to fight in the arena because of its indestructable shell."
 
 class Pillar(Player):
 
@@ -2792,9 +2940,9 @@ class Pillar(Player):
     idleImage = Player.load("pufferfish", "pillar.png")
 
 allClasses = [
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Skugg, Can, Frog, Monster, Penguin,
-Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin, Turtle,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Rat, Skugg, Can, Frog, Monster, Penguin, Turtle,
+Puncher, Big, Green, Tree, Sad, Animals, Pufferfish, Crawler, Bird, Robot, Lizard, Golem, Alien, Glitch, Monster, Penguin, Turtle,
 ]
 
 def restart():
