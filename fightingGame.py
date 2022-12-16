@@ -1826,7 +1826,7 @@ class Ninja(Player):
     turnImage = Player.load("ninja", "turn.png")
     stunned1Image = Player.load("ninja", "stunned1.png")
     stunned2Image = Player.load("ninja", "stunned2.png")
-    text = "?"
+    text = "They use a variety of different techniques and tactics to effectively use their weapons in combat."
 
 class Bird(Player):
 
