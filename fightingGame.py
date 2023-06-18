@@ -127,7 +127,7 @@ class Projectile():
             self.box = [32-11, 18, 32-6, 32-9, 20+20*op,20+20*op,20+self.owner.attackFrame*op]
         if isinstance(self.owner, Robot):
             self.xv = (self.facingRight-0.5) * 20
-            self.box = [32-8, 16, 32-4, 19, 12+3*self.op, 12]
+            self.box = [32-8, 16, 32-4, 19, 12+3*self.op, 12-2*self.op]
         if isinstance(self.owner, Alien):
             self.xv = (self.facingRight-0.5) * -20
             self.box = [3, 14, 7, 17, 7,0,0]
@@ -486,11 +486,14 @@ class Player():
                 self.xv=0
         if self.hurtboxes[0]<96:
             self.x += 96-self.hurtboxes[0]
-            if self.stun and not isinstance(self,Golem):
-                self.xv=-self.xv*0.5
-                self.yv=-abs(self.yv)
-            else:
-                self.xv=0
+            if self.stun:
+                if self.stun>24:
+                    self.stun -= 5
+                if not isinstance(self,Golem):
+                    self.xv=-self.xv*0.5
+                    self.yv=-abs(self.yv)
+                else:
+                    self.xv=0
         if self.hurtboxes[3]+self.flyingHeight>504:
             self.y += 504-self.flyingHeight-self.hurtboxes[3]
             self.yv=0
@@ -1396,12 +1399,13 @@ class Sad(Player):
         self.flyingHeight=2*Player.SCALE
         self.init2()
         self.xspeed = 0
+        self.CHARGE = 30
 
         self.punch = [
         [10, self.stunnedImage],
         [13, self.idleImage],
         [16, self.preSkullImage],
-        [20, self.skullImage, [19, 15, 24, 22, 35]],
+        [20, self.skullImage, [19, 15, 24, 22, 35, 35, 30]],
         [31, self.skullImage],
         [37, self.preSkullImage],
         ]
@@ -1683,6 +1687,8 @@ class Pufferfish(Player):
         elif self.image in [self.preImage,self.prePunchImage,self.punchImage]:
             self.yv-=0.5
             self.yv*=0.97
+        if self.state == 0:
+            self.attackBox = None
 
     def __init__(self, x, y, facingRight, controls, joystick=None,skin=0):
         super(Pufferfish, self).__init__(x, y, facingRight, controls, joystick, skin)
@@ -1746,12 +1752,12 @@ class Pufferfish(Player):
             self.xv+=(self.facingRight-0.5)*0.2
             if self.pressed["a"] and not self.pressed["d"] and self.facingRight:
                 self.facingRight = False
-                self.attackBox = [10, 19, 13, 25, 30]
+                self.attackBox = [10, 19, 13, 25, 30,35,20,0.5]
                 self.yv-=3
                 self.yv*=0.9
             if self.pressed["d"] and not self.pressed["a"] and not self.facingRight:
                 self.facingRight = True
-                self.attackBox = [10, 19, 13, 25, 30]
+                self.attackBox = [10, 19, 13, 25, 30,35,20,0.5]
                 self.yv-=3
                 self.yv*=0.9
 
@@ -1811,7 +1817,7 @@ class Crawler(Player):
     def confirmedHit(self, damage):
         if self.attack=="sting" and not self.evil:
             self.xv=max(abs(self.xv), 3)*(self.facingRight*2-1)
-            self.yv=-11.5
+            self.yv=-12
         if self.evil:
             self.hp=min(self.hp+damage//2, self.maxhp)
             #self.ultCharge+=10
@@ -1985,6 +1991,7 @@ class Crawler(Player):
             self.executeAttack(self.spinner, not self.pressed["3"])
             if 5<self.attackFrame<45:
                 if (self.attackFrame%8)<4:
+                    self.attackBox = None
                     self.image = self.longPunch2Image
                 self.yv-=0.79
                 self.yv*=0.95
@@ -2060,11 +2067,11 @@ class Ninja(Player):
         ]
 
         self.jabData = [
-        [6, self.jab1Image],
-        [9, self.jab2Image, [21,14,27,20, 20]],
-        [13, self.jab2Image],
-        [20, self.jab1Image],
-        [25, self.idleImage],
+        [7, self.jab1Image],
+        [11, self.jab2Image, [21,14,27,20, 20]],
+        [16, self.jab2Image],
+        [23, self.jab1Image],
+        [28, self.idleImage],
         ]
 
         self.lanceData = [
@@ -2075,15 +2082,15 @@ class Ninja(Player):
         [17, self.lanceImages[2], [22,19,30,24, 45]],
         [28, self.lanceImages[3]],
         [33, self.lanceImages[2], [2,19,11,24, 19]],
-        [43, self.lanceImages[1]],
-        [50, self.lanceImages[0]],#, [12,9,16,13, 10,40]],
+        [46, self.lanceImages[1]],
+        [53, self.lanceImages[0], [12,9,16,13, 10,40]],
         [58, self.idleImage],
         ]
 
 
         self.stingData = [
         [4, self.pierceImages[3]],
-        [8, self.pierceImages[4], [25,22,32,27, 15]],
+        [8, self.pierceImages[4], [25,22,31,27, 11]],
         [11, self.pierceImages[4]],
         [15, self.pierceImages[3]],
         [180, self.crawlingImage],
@@ -2326,7 +2333,7 @@ class Ninja(Player):
     helpTexts =[
     "Pro tips:",
     "Press Down to lie down/stand up.",
-    "Press Attack1/2 to flip around.",
+    "Press Attack1/Attack2 to flip around.",
     "Pressing both uses SUPER.",
     "While lying on your back: Hold Attack3 to fly!",
     "While standing Attack3 is a whirlwind SUPER.",
@@ -2346,6 +2353,7 @@ class Bird(Player):
                 self.xv=(self.facingRight-0.5)*10
                 self.state = State.idle
                 self.stun = 0
+                self.invincible = False
                 self.attackBox =None
                 self.onGround = False
                 Player.ultSound.play()
@@ -2498,6 +2506,7 @@ class Darkbird(Player):
                 self.xv=(self.facingRight-0.5)*10
                 self.state = State.idle
                 self.stun = 0
+                self.invincible = False
                 self.attackBox =None
                 self.onGround = False
                 Player.ultSound.play()
@@ -2991,7 +3000,7 @@ class Golem(Player):
         ]
 
         self.ultimate = [
-        [50, self.fireImage, [9,6,24,30, 25, 50], True],
+        [20, self.fireImage, [9,6,24,30, 25,50,0.5], True],
         ]
 
     def keys(self):
@@ -3230,7 +3239,8 @@ class Glitch(Player):
         #[10, self.idleImage],
         [27, self.preGlitchImage],
         [40, self.glitchImage, [9, 15, 23, 27, 5,-4,2]],
-        [45, self.glitchImage, [9, 15, 23, 27, 10,50]],
+        [45, self.glitchImage, [9, 15, 23, 27, 10,40]],
+        [60, self.preGlitchImage],
         [60, self.idleImage],
         ]
 
@@ -4346,7 +4356,7 @@ class Turtle(Player):
 
         self.first = [
         [3, self.idleImage],
-        [5, self.punchImage, [21, 22, 25, 26, 11]],
+        [5, self.punchImage, [21, 22, 25, 26, 10,15,10,-0.5]],
         [10, self.punchImage],
         [15, self.idleImage],
         ]
@@ -4480,9 +4490,9 @@ class Cat(Player):
         ]
 
         self.second = [
-        [18, self.preBiteImage],
-        [23, self.biteImage, [32-9-7, 32-8-6, 32-9, 32-8, 29]],
-        [33, self.biteImage],
+        [20, self.preBiteImage],
+        [25, self.biteImage, [32-9-7, 32-8-6, 32-9, 32-8, 28]],
+        [35, self.biteImage],
         ]
 
         self.long = [
