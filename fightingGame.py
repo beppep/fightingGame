@@ -479,9 +479,12 @@ class Player():
         #bounds
         if self.hurtboxes[2]>904:
             self.x += 904-self.hurtboxes[2]
-            if self.stun and not isinstance(self,Golem): #bouncy walls
-                self.xv=-self.xv*0.5
-                self.yv=-abs(self.yv)
+            if self.stun: #bouncy walls
+                if self.stun>24:
+                    self.stun -= 5
+                if not isinstance(self,Golem):
+                    self.xv=-self.xv*0.5
+                    self.yv=-abs(self.yv)
             else:
                 self.xv=0
         if self.hurtboxes[0]<96:
@@ -492,8 +495,8 @@ class Player():
                 if not isinstance(self,Golem):
                     self.xv=-self.xv*0.5
                     self.yv=-abs(self.yv)
-                else:
-                    self.xv=0
+            else:
+                self.xv=0
         if self.hurtboxes[3]+self.flyingHeight>504:
             self.y += 504-self.flyingHeight-self.hurtboxes[3]
             self.yv=0
@@ -1861,7 +1864,7 @@ class Crawler(Player):
         self.spinner = [
         [2, self.preImage],
         [5, self.longImage],
-        [45, self.longPunchImage, [7, 12, 24, 27, 10,7]],
+        [45, self.longPunchImage, [7, 12, 24, 28, 10,7]],
         [55, self.longImage],
         [60, self.preImage],
         ]
@@ -3000,7 +3003,7 @@ class Golem(Player):
         ]
 
         self.ultimate = [
-        [20, self.fireImage, [9,6,24,30, 25,50,0.5], True],
+        [20, self.fireImage, [9,6,24,30, 25,50,50,0.5], True],
         ]
 
     def keys(self):
@@ -3364,7 +3367,7 @@ class Glitch(Player):
     text = "A glitch in the simulation"
     helpTexts =[
     "Pro tips:",
-    "Can double jump."
+    "Can double jump.",
     "Hold Attack1 to shoot a missile.",
     "SUPER makes your body invulnerable",
     "and makes your next attack instant.",
