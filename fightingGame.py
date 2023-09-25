@@ -4025,11 +4025,11 @@ class Hedgehog(Player):
         [12, self.preKickImage],
         [15, self.kickImage, [3, 18, 11, 25, 20]],
         [18, self.preKickImage],
-        [25, self.preRollImage],
+        [24, self.preRollImage],
         ]
 
         self.second = [
-        [10, self.preSpikeImage],
+        [9, self.preSpikeImage],
         [15, self.spikeImage, [5, 15, 20, 15+9, 30,30,30,0.5]],
         [20, self.spikeImage, [5, 15, 20, 15+9, 30,30,30,0.5]],
         [28, self.spikeImage],
@@ -4074,10 +4074,12 @@ class Hedgehog(Player):
                 self.image = [self.rollImage,self.roll2Image][self.attackFrame%8 < 4]
                 self.xv = (self.facingRight-0.5)*12
                 #self.yv *= 0.5
-                self.attackBox = [9,14,9+14,29, 7,40,20,-0.5]
+                self.attackBox = [9,14,9+14,29, 8,40,20,-0.5]
                 if not self.pressed["3"]:
                     self.attackFrame = 50
             elif self.attackFrame < 60:
+                if self.attackFrame == 51:
+                    self.xv = (self.facingRight-0.5)*12
                 self.attackBox = None
                 self.image = self.preRollImage
             else:
@@ -4089,10 +4091,10 @@ class Hedgehog(Player):
                 self.image = self.preRollImage
                 self.attackBox = None      
             elif self.attackFrame < 100: 
-                self.image = [self.rollImage,self.roll2Image][self.attackFrame%8 < 4]
+                self.image = [self.rollImage,self.roll2Image][self.attackFrame%4 < 2]
                 self.xv = (self.facingRight-0.5)*24
                 self.yv = 0
-                self.attackBox = [9,14,9+14,29, 7,40,20,-0.5]
+                self.attackBox = [9,14,9+14,29, 8,40,20,-0.5]
                 if not self.pressed["4"] and False:
                     self.attackFrame = 100
             elif self.attackFrame < 105:
