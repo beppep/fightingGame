@@ -4010,6 +4010,8 @@ class Hedgehog(Player):
     def confirmedHit(self,damage):
         if self.attack == "roll":
             self.yv = -5
+            self.xv = (self.facingRight-0.5)*12
+            self.x -= (self.facingRight-0.5)*12
 
     def __init__(self, x, y, facingRight, controls, joystick=None,skin=0):
         super().__init__(x, y, facingRight, controls, joystick, skin)
@@ -4078,8 +4080,6 @@ class Hedgehog(Player):
                 if not self.pressed["3"]:
                     self.attackFrame = 50
             elif self.attackFrame < 60:
-                if self.attackFrame == 51:
-                    self.xv = (self.facingRight-0.5)*12
                 self.attackBox = None
                 self.image = self.preRollImage
             else:
@@ -4127,7 +4127,6 @@ class Hedgehog(Player):
     "Hold down Attack3 to roll!",
     "Press Down for SUPER.",
     "Tapping Attack3 is really good actually.",
-    "It's a pseudo shine.",
     ]
 class Monster(Player):
 
