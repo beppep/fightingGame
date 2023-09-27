@@ -43,7 +43,9 @@ def playHitSound(vol):
 
 def endEffect():
     pygame.draw.rect(gameDisplay, (200, 0, 100), (0,0,1000,600), 0)
-    Player.freezeTime=1
+    Player.freezeTime = 60
+    Player.killScreen = 1
+    Player.shake += 60
     if len(Player.players)>2:
         Player.killSound.play()
     else:
@@ -249,6 +251,7 @@ class Projectile():
 
 class Player():
     freezeTime=0
+    killScreen=0
     SCALE=8
     players=[]
     def __init__(self, x, y, facingRight, controls, joystick=None,skin=0):
@@ -548,7 +551,7 @@ class Player():
         self.hitLag = max(self.hitLag, int(damage*0.2))
         if hasattr(player, "hitLag"):
             player.hitLag = max(player.hitLag, int(damage*0.2))
-        #Player.freezeTime = damage*0.003
+        Player.freezeTime = int(damage*0.2)
         if stun:
             self.state = State.stunned
             self.image = self.stunnedImage
@@ -4980,10 +4983,11 @@ while State.jump_out == False:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             State.jump_out = True
-    if Player.freezeTime:
-        time.sleep(Player.freezeTime)
-        Player.freezeTime=0
-    if len(Player.players)<2 or pressed[pygame.K_ESCAPE]:
+    if Player.freezeTime>0:
+        Player.freezeTime-=1
+        if Player.freezeTime<=0:
+            Player.killScreen = 0
+    if len(Player.players)<2 or pressed[pygame.K_ESCAPE] and not Player.freezeTime:
         choices, skinChoices = restart()
         
         if Player.AIoption != 3:
@@ -5015,7 +5019,7 @@ while State.jump_out == False:
         pygame.display.update()
     
     #shake
-    if Player.shake>0 and not Player.freezeTime:
+    if Player.shake>0:
         Player.shake-=2
         shakeX = (random.random()-0.5)*Player.shake
         shakeY = (random.random()-0.5)*Player.shake
@@ -5023,19 +5027,23 @@ while State.jump_out == False:
         shakeX = 0
         shakeY = 0
     #background
-    gameDisplay.blit(currentBackground, (int(shakeX),int(shakeY)))
-    
+    if Player.killScreen:
+        pygame.draw.rect(gameDisplay, (200, 0, 100), (0,0,1000,600), 0)
+    else:
+        gameDisplay.blit(currentBackground, (int(shakeX),int(shakeY)))
+
     #draw platforms
-    for player in Platform.platforms:
-        player.draw()
+    #for player in Platform.platforms:
+    #    player.draw()
 
     #draw flashes
-    pressed = pygame.key.get_pressed()
-    for player in Player.players:
-        player.getPressed(pressed)
-        player.action()
-    for player in Player.players+Projectile.projectiles:
-        player.physics()
+    if not Player.freezeTime:
+        pressed = pygame.key.get_pressed()
+        for player in Player.players:
+            player.getPressed(pressed)
+            player.action()
+        for player in Player.players+Projectile.projectiles:
+            player.physics()
 
     #draw players
     for player in Projectile.projectiles+Player.players:
