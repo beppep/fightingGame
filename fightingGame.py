@@ -31,8 +31,8 @@ def initSound():
     Player.gameSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "game.wav"))
     Player.gameSound.set_volume(v*0.5)
     
-    pygame.mixer.music.load(os.path.join(filepath, "music.wav")) #must be wav 16bit and stuff?
-    pygame.mixer.music.set_volume(v*0.1)
+    pygame.mixer.music.load(os.path.join(filepath, "fightinggame.wav")) #must be wav 16bit and stuff?
+    pygame.mixer.music.set_volume(v*0.5)
     pygame.mixer.music.play(-1)
 
 def playHitSound(vol):
