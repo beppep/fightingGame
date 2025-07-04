@@ -26,7 +26,7 @@ def initSound():
     Player.ultSound.set_volume(v*0.1)
     Player.bzzzSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "bzzzEffect.wav"))
     Player.bzzzSound.set_volume(v*0.05)
-    Player.killSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "smashbros.wav"))
+    Player.killSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "smashBros.wav"))
     Player.killSound.set_volume(v*0.5)
     Player.gameSound = pygame.mixer.Sound(os.path.join(SOUND_PATH, "game.wav"))
     Player.gameSound.set_volume(v*0.5)
