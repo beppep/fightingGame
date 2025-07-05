@@ -340,6 +340,43 @@ class Player:
     SCALE = 8
     players = []
 
+    MOVEMENT_CONTROLS = {
+        "arrow": {
+            "a": pygame.K_LEFT,
+            "d": pygame.K_RIGHT,
+            "w": pygame.K_UP,
+            "4": pygame.K_DOWN,
+        },
+        "wasd": {
+            "a": pygame.K_a,
+            "d": pygame.K_d,
+            "w": pygame.K_w,
+            "4": pygame.K_s,
+        },
+        "joystick": {
+            "w": 0,
+            "4": 5,
+        },
+    }
+
+    ACTION_CONTROLS = {
+        "xcv": {
+            "1": pygame.K_x,
+            "2": pygame.K_c,
+            "3": pygame.K_v,
+        },
+        "iop": {
+            "1": pygame.K_i,
+            "2": pygame.K_o,
+            "3": pygame.K_p,
+        },
+        "joystick": {
+            "1": 1,
+            "2": 2,
+            "3": 3,
+        },
+    }
+
     def __init__(self, x, y, facingRight, controls, joystick=None, skin=0):
         Player.players.append(self)
         self.loadImages(skin)
@@ -387,6 +424,9 @@ class Player:
         # self.hurtboxes = self.generateBox(self.box)
         self.hp = self.maxhp
         pass
+
+    def getControls(movement, actions):
+        return Player.MOVEMENT_CONTROLS[movement] | Player.ACTION_CONTROLS[actions]
 
     def passive(self):
         pass
@@ -5445,6 +5485,21 @@ def restart():
     sticks = []
     stickIds = []
 
+    SELECT_CONTROLS = [
+        [
+            Player.getControls("wasd", "iop"),
+            Player.getControls("wasd", "xcv"),
+            Player.getControls("wasd", "iop"),
+            None,
+        ],
+        [
+            Player.getControls("arrow", "xcv"),
+            Player.getControls("arrow", "iop"),
+            Player.getControls("wasd", "iop"),
+            None,
+        ],
+    ]
+
     while State.jump_out == False and not pressed[pygame.K_q]:
         # pygame.event.get()
         for event in pygame.event.get():
@@ -5452,25 +5507,51 @@ def restart():
                 State.jump_out = True
 
             # handle controller input
-            elif event.type == pygame.JOYBUTTONDOWN and event.joy not in stickIds:
-                sticks.append(allSticks[event.joy])
-                stickIds.append(event.joy)
-                State.playerCount += 1
+            elif event.type == pygame.JOYBUTTONDOWN:
+                idx, stick = next(
+                    (
+                        (i, s)
+                        for i, s in enumerate(sticks)
+                        if s.get_instance_id() == event.joy
+                    ),
+                    (0, None),
+                )
+                if stick and stick.get_button(1):
+                    sticks.pop(idx)
+                    stickIds.pop(idx)
+                    if len(choices) > 2 + idx:
+                        choices.pop(2 + idx)
+                    State.playerCount -= 1
+                elif not stick and event.button == 0:
+                    sticks.append(allSticks[event.joy])
+                    stickIds.append(event.joy)
+                    State.playerCount += 1
 
         lag = 0
+
+        keyboard_controls = [
+            c
+            for c in [
+                SELECT_CONTROLS[0][Player.AIoption],
+                SELECT_CONTROLS[1][Player.AI2option],
+            ]
+            if c is not None
+        ]
+        non_stick_players = len(keyboard_controls)
+        is_stick_selecting = len(choices) >= non_stick_players
+
+        actions = {
+            "a": False,
+            "d": False,
+            "w": False,
+            "1": False,
+            "2": False,
+            "3": False,
+            "4": False,
+        }
+
         pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
-            num -= 1
-            lag += 0.1
-        if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
-            num += 1
-            lag += 0.1
-        if pressed[pygame.K_UP] or pressed[pygame.K_w]:
-            skinChoice = (skinChoice + 1) % 6
-            lag += 0.1
-        if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
-            skinChoice = (skinChoice - 1) % 6
-            lag += 0.1
+
         if pressed[pygame.K_1]:
             Player.AIoption += 1
             if Player.AIoption == 4:
@@ -5487,7 +5568,50 @@ def restart():
             if Player.AI2option == 3:
                 State.playerCount -= 1
             lag += 0.2
-        if pressed[pygame.K_r]:
+        if pressed[pygame.K_RETURN] or pressed[pygame.K_SPACE]:
+            actions["2"] = True
+
+        if non_stick_players + len(sticks) == 0:
+            continue
+
+        if is_stick_selecting:
+            stick = sticks[len(choices) - non_stick_players]
+            hat_x, hat_y = stick.get_hat(0)
+            joy_x = stick.get_axis(0)
+            joy_y = stick.get_axis(1)
+            if hat_x == -1 or joy_x < -0.5:
+                actions["a"] = True
+            elif hat_x == 1 or joy_x > 0.5:
+                actions["d"] = True
+            if hat_y == 1 or joy_y > 0.5:
+                actions["w"] = True
+            elif hat_y == -1 or joy_y < -0.5:
+                actions["4"] = True
+            if stick.get_button(0):
+                actions["2"] = True
+            if stick.get_button(2):
+                actions["1"] = True
+            if stick.get_button(3):
+                actions["3"] = True
+        else:
+            control = keyboard_controls[len(choices)]
+            for action, key in control.items():
+                if pressed[key]:
+                    actions[action] = True
+
+        if actions["a"]:
+            num -= 1
+            lag += 0.1
+        if actions["d"]:
+            num += 1
+            lag += 0.1
+        if actions["w"]:
+            skinChoice = (skinChoice + 1) % 6
+            lag += 0.1
+        if actions["4"]:
+            skinChoice = (skinChoice - 1) % 6
+            lag += 0.1
+        if actions["3"]:
             if random.random() < 0.92:
                 nm = random.randint(0, len(allClasses) - 1)
                 choices.append(pickCharacter(nm, (random.random() < 0.5)))
@@ -5495,15 +5619,12 @@ def restart():
                 choices.append(random.choice(legalClasses))
             skinChoices.append(random.randint(1, 5) * (random.random() < skinChance))
             # num=0
-            if len(choices) >= State.playerCount:
-                return (choices, skinChoices, sticks)
-            lag += 0.5
-        if pressed[pygame.K_BACKSPACE] and len(choices) > 0:
+        if actions["1"] and len(choices) > 0:
             choices.pop()
             skinChoices.pop()
             # num=0
             lag += 0.5
-        if pressed[pygame.K_SPACE] or pressed[pygame.K_RETURN]:
+        if actions["2"]:
             choices.append(pickCharacter(num, pressed[pygame.K_b]))
             skinChoices.append(skinChoice)
             skinChoice = (skinChoice + 1) % 6
@@ -5701,8 +5822,8 @@ pygame.joystick.init()
 State.playerCount = 2
 State.frameRate = 60
 State.jump_out = False
-Player.AIoption = 1  # 0:XCV 1:IOP 2:ai 3:off
-Player.AI2option = 1  # 0:IOP 1:XCV 2:ai 3:off
+Player.AIoption = 1  # 0:IOP 1:XCV 2:ai 3:off
+Player.AI2option = 1  # 0:XCV 1:IOP 2:ai 3:off
 while State.jump_out == False:
     # pygame.event.get()
     for event in pygame.event.get():
@@ -5723,15 +5844,7 @@ while State.jump_out == False:
                     200,
                     300,
                     True,
-                    {
-                        "a": pygame.K_a,
-                        "d": pygame.K_d,
-                        "w": pygame.K_w,
-                        "1": pygame.K_i,
-                        "2": pygame.K_o,
-                        "3": pygame.K_p,
-                        "4": pygame.K_s,
-                    },
+                    Player.getControls("wasd", "iop"),
                     skin=skinChoices[0],
                 )
             else:
@@ -5739,15 +5852,7 @@ while State.jump_out == False:
                     200,
                     300,
                     True,
-                    {
-                        "a": pygame.K_a,
-                        "d": pygame.K_d,
-                        "w": pygame.K_w,
-                        "1": pygame.K_x,
-                        "2": pygame.K_c,
-                        "3": pygame.K_v,
-                        "4": pygame.K_s,
-                    },
+                    Player.getControls("wasd", "xcv"),
                     skin=skinChoices[0],
                 )
             if Player.AIoption == 2:
@@ -5760,15 +5865,7 @@ while State.jump_out == False:
                     600,
                     300,
                     False,
-                    {
-                        "a": pygame.K_LEFT,
-                        "d": pygame.K_RIGHT,
-                        "w": pygame.K_UP,
-                        "1": pygame.K_x,
-                        "2": pygame.K_c,
-                        "3": pygame.K_v,
-                        "4": pygame.K_DOWN,
-                    },
+                    Player.getControls("arrow", "xcv"),
                     skin=skinChoices[humansBefore],
                 )
             else:
@@ -5776,15 +5873,7 @@ while State.jump_out == False:
                     600,
                     300,
                     False,
-                    {
-                        "a": pygame.K_LEFT,
-                        "d": pygame.K_RIGHT,
-                        "w": pygame.K_UP,
-                        "1": pygame.K_i,
-                        "2": pygame.K_o,
-                        "3": pygame.K_p,
-                        "4": pygame.K_DOWN,
-                    },
+                    Player.getControls("arrow", "iop"),
                     skin=skinChoices[humansBefore],
                 )
             if Player.AI2option == 2:
@@ -5795,7 +5884,7 @@ while State.jump_out == False:
                 400,
                 300,
                 False,
-                {"w": 0, "3": 4, "4": 5},
+                Player.getControls("joystick", "joystick"),
                 sticks[i],
                 skinChoices[humansBefore + i],
             )
