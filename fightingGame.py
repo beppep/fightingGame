@@ -5437,11 +5437,25 @@ def restart():
     myfont = pygame.font.SysFont("Calibri", 100)
     myfont2 = pygame.font.SysFont("Calibri", 20)
     pressed = pygame.key.get_pressed()
+
+    # We need joysticks in memory to collect input
+    allSticks = [
+        pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())
+    ]
+    sticks = []
+    stickIds = []
+
     while State.jump_out == False and not pressed[pygame.K_q]:
         # pygame.event.get()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 State.jump_out = True
+
+            # handle controller input
+            elif event.type == pygame.JOYBUTTONDOWN and event.joy not in stickIds:
+                sticks.append(allSticks[event.joy])
+                stickIds.append(event.joy)
+                State.playerCount += 1
 
         lag = 0
         pressed = pygame.key.get_pressed()
@@ -5482,7 +5496,7 @@ def restart():
             skinChoices.append(random.randint(1, 5) * (random.random() < skinChance))
             # num=0
             if len(choices) >= State.playerCount:
-                return (choices, skinChoices)
+                return (choices, skinChoices, sticks)
             lag += 0.5
         if pressed[pygame.K_BACKSPACE] and len(choices) > 0:
             choices.pop()
@@ -5495,7 +5509,7 @@ def restart():
             skinChoice = (skinChoice + 1) % 6
             # num=0
             if len(choices) >= State.playerCount:
-                return (choices, skinChoices)
+                return (choices, skinChoices, sticks)
             lag += 0.5
 
         # draw
@@ -5571,7 +5585,23 @@ def restart():
             (0, 0, 0),
         )
 
+        stickTextsurfaces = [
+            myfont2.render(
+                f"player {3 + i}: {stick.get_name()}",
+                True,
+                (0, 0, 0),
+            )
+            for i, stick in enumerate(sticks)
+        ]
+
+        textsurfaceControllers = myfont2.render(
+            "Controller(s) detected! Press a button to join...",
+            True,
+            (0, 0, 0),
+        )
+
         CHOOSECHARS_margin = 80
+        LINE_HEIGHT = 20
 
         gameDisplay.blit(textsurfaceChooseCharacters, (0, 0))
         gameDisplay.blit(
@@ -5580,11 +5610,20 @@ def restart():
         gameDisplay.blit(textsurface2, (10, 570))
         for i in range(len(textsurfacesHelp)):
             gameDisplay.blit(
-                textsurfacesHelp[i], (600, CHOOSECHARS_margin + 10 + 20 * i)
+                textsurfacesHelp[i], (600, CHOOSECHARS_margin + 10 + LINE_HEIGHT * i)
             )
         gameDisplay.blit(textsurfaceControls, (10, CHOOSECHARS_margin + 10))
         gameDisplay.blit(textsurfaceAI, (10, CHOOSECHARS_margin + 30))
         gameDisplay.blit(textsurfaceAI2, (10, CHOOSECHARS_margin + 50))
+
+        for i, text in enumerate(stickTextsurfaces):
+            gameDisplay.blit(text, (10, CHOOSECHARS_margin + 70 + i * LINE_HEIGHT))
+
+        if pygame.joystick.get_count() > len(stickIds):
+            gameDisplay.blit(
+                textsurfaceControllers,
+                (10, CHOOSECHARS_margin + 70 + LINE_HEIGHT * len(stickIds)),
+            )
 
         if pressed[pygame.K_c] or pressed[pygame.K_j]:
             for i in range(10):
@@ -5659,11 +5698,7 @@ Platform.generate()
 initSound()
 
 pygame.joystick.init()
-stickNum = pygame.joystick.get_count()
-sticks = []
-for i in range(stickNum):
-    sticks.append(pygame.joystick.Joystick(i))
-State.playerCount = 2 + len(sticks)
+State.playerCount = 2
 State.frameRate = 60
 State.jump_out = False
 Player.AIoption = 1  # 0:XCV 1:IOP 2:ai 3:off
@@ -5680,7 +5715,7 @@ while State.jump_out == False:
     if len(Player.players) < 2 or pressed[pygame.K_ESCAPE] and not Player.freezeTime:
         if len(Player.players) == 1:
             winAnimation()
-        choices, skinChoices = restart()
+        choices, skinChoices, sticks = restart()
 
         if Player.AIoption != 3:
             if Player.AIoption == 0:
