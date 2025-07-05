@@ -492,7 +492,6 @@ class Player:
 
         elif self.joystick:
             x = self.joystick.get_axis(0)
-            triggers = self.joystick.get_axis(2)  # lt - rt but 0 = -3.01
             self.pressed["d"] = x > 0.5
             self.pressed["a"] = x < -0.5
             self.pressed["2"] = self.joystick.get_button(
@@ -501,8 +500,6 @@ class Player:
             self.pressed["1"] = self.joystick.get_button(2)  # (triggers>0.5)
             for i in ["w", "3", "4"]:
                 self.pressed[i] = self.joystick.get_button(self.controls[i])
-            self.pressed["3"] += triggers > 0.5
-            self.pressed["4"] += triggers < -0.5 and triggers > -2
         else:
             for i in ["a", "d", "w", "1", "2", "3", "4"]:
                 self.pressed[i] = pressed[self.controls[i]]
@@ -5666,7 +5663,6 @@ stickNum = pygame.joystick.get_count()
 sticks = []
 for i in range(stickNum):
     sticks.append(pygame.joystick.Joystick(i))
-    sticks[-1].init()
 State.playerCount = 2 + len(sticks)
 State.frameRate = 60
 State.jump_out = False
