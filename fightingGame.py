@@ -353,8 +353,16 @@ class Player:
             "w": pygame.K_w,
             "4": pygame.K_s,
         },
-        "joystick": {
+        "xbox": {
             "w": 0,
+            "4": 5,
+        },
+        "dualshock": {
+            "w": 1,
+            "4": 5,
+        },
+        "logitech": {
+            "w": 1,
             "4": 5,
         },
     }
@@ -370,9 +378,19 @@ class Player:
             "2": pygame.K_o,
             "3": pygame.K_p,
         },
-        "joystick": {
+        "xbox": {
             "1": 1,
             "2": 2,
+            "3": 3,
+        },
+        "dualshock": {
+            "1": 2,
+            "2": 0,
+            "3": 3,
+        },
+        "logitech": {
+            "1": 2,
+            "2": 0,
             "3": 3,
         },
     }
@@ -427,6 +445,13 @@ class Player:
 
     def getControls(movement, actions):
         return Player.MOVEMENT_CONTROLS[movement] | Player.ACTION_CONTROLS[actions]
+
+    def getJoystickControls(stick):
+        controller_name = stick.get_name().lower()
+        for name in ["xbox", "dualshock", "logitech"]:
+            if name in controller_name:
+                return Player.getControls(name, name)
+        return "xbox"
 
     def passive(self):
         pass
@@ -531,14 +556,13 @@ class Player:
             self.pressed["a"] = not self.pressed["d"]
 
         elif self.joystick:
-            x = self.joystick.get_axis(0)
-            self.pressed["d"] = x > 0.5
-            self.pressed["a"] = x < -0.5
-            self.pressed["2"] = self.joystick.get_button(
-                3
-            )  # (triggers<-0.5 and triggers>-2)
-            self.pressed["1"] = self.joystick.get_button(2)  # (triggers>0.5)
-            for i in ["w", "3", "4"]:
+            hat_x, hat_y = self.joystick.get_hat(0)
+            joy_x = self.joystick.get_axis(0)
+            joy_y = self.joystick.get_axis(1)
+            self.pressed["a"] = hat_x == -1 or joy_x < -0.5
+            self.pressed["d"] = hat_x == 1 or joy_x > 0.5
+            self.pressed["4"] = hat_y == -1 or joy_y < -0.5
+            for i in ["w", "1", "2", "3", "4"]:
                 self.pressed[i] = self.joystick.get_button(self.controls[i])
         else:
             for i in ["a", "d", "w", "1", "2", "3", "4"]:
@@ -5484,6 +5508,7 @@ def restart():
     ]
     sticks = []
     stickIds = []
+    stick_controls = []
 
     SELECT_CONTROLS = [
         [
@@ -5508,24 +5533,29 @@ def restart():
 
             # handle controller input
             elif event.type == pygame.JOYBUTTONDOWN:
-                idx, stick = next(
+                idx, stick, control = next(
                     (
-                        (i, s)
+                        (i, s, stick_controls[i])
                         for i, s in enumerate(sticks)
                         if s.get_instance_id() == event.joy
                     ),
-                    (0, None),
+                    (0, None, None),
                 )
-                if stick and stick.get_button(1):
+                if stick and stick.get_button(control["1"]):
                     sticks.pop(idx)
                     stickIds.pop(idx)
+                    stick_controls.pop(idx)
                     if len(choices) > 2 + idx:
                         choices.pop(2 + idx)
                     State.playerCount -= 1
-                elif not stick and event.button == 0:
-                    sticks.append(allSticks[event.joy])
-                    stickIds.append(event.joy)
-                    State.playerCount += 1
+                elif not stick:
+                    stick = allSticks[event.joy]
+                    control = Player.getJoystickControls(stick)
+                    if event.button == control["w"]:
+                        sticks.append(stick)
+                        stickIds.append(event.joy)
+                        stick_controls.append(Player.getJoystickControls(stick))
+                        State.playerCount += 1
 
         lag = 0
 
@@ -5575,7 +5605,9 @@ def restart():
             continue
 
         if is_stick_selecting:
-            stick = sticks[len(choices) - non_stick_players]
+            idx = len(choices) - non_stick_players
+            stick = sticks[idx]
+            control = stick_controls[idx]
             hat_x, hat_y = stick.get_hat(0)
             joy_x = stick.get_axis(0)
             joy_y = stick.get_axis(1)
@@ -5587,11 +5619,11 @@ def restart():
                 actions["w"] = True
             elif hat_y == -1 or joy_y < -0.5:
                 actions["4"] = True
-            if stick.get_button(0):
+            if stick.get_button(control["w"]):
                 actions["2"] = True
-            if stick.get_button(2):
+            if stick.get_button(control["2"]):
                 actions["1"] = True
-            if stick.get_button(3):
+            if stick.get_button(control["3"]):
                 actions["3"] = True
         else:
             control = keyboard_controls[len(choices)]
@@ -5716,7 +5748,7 @@ def restart():
         ]
 
         textsurfaceControllers = myfont2.render(
-            "Controller(s) detected! Press a button to join...",
+            "Controller(s) detected! Press jump button to join...",
             True,
             (0, 0, 0),
         )
@@ -5879,13 +5911,13 @@ while State.jump_out == False:
             if Player.AI2option == 2:
                 Player.players[-1].random = 1
         humansBefore = len(Player.players)
-        for i in range(len(sticks)):
+        for i, stick in enumerate(sticks):
             choices[humansBefore + i](
                 400,
                 300,
                 False,
-                Player.getControls("joystick", "joystick"),
-                sticks[i],
+                Player.getJoystickControls(stick),
+                stick,
                 skinChoices[humansBefore + i],
             )
         AiFocus = 0  # cannot be 1!!!! or it crashes when ai is alone.
