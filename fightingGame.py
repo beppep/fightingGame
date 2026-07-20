@@ -3,7 +3,6 @@ import time
 import random
 import os
 
-
 def fightingGameMain():
 
     clock = pygame.time.Clock()
